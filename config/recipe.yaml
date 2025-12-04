@@ -1,0 +1,38 @@
+# This steps will be executed project root directory
+# Following variables are given by the build system:
+# - {install_prefix}: The installation prefix path
+
+name: LAMMPS Basic Build
+steps:
+  - name: Configure
+    command: cmake ./cmake
+    args:
+      - "-B build"
+      - "-G Ninja"
+      - "-D CMAKE_INSTALL_PREFIX={install_prefix}"
+      - "-D CMAKE_BUILD_TYPE=Release"
+      - "-D BUILD_MPI=ON"
+      - "-D BUILD_SHARED_LIBS=ON"
+      - "-D BUILD_PYTHON=ON"
+      - "-D PKG_PYTHON=ON"
+      - "-D PKG_KSPACE=ON"
+      - "-D PKG_MANYBODY=ON"
+      - "-D PKG_MOLECULE=ON"
+      - "-D PKG_RIGID=ON"
+  - name: Build
+    command: cmake --build build
+  - name: Install
+    command: cmake --install build
+  - name: Build Python
+    command: python3 python/install.py
+    args:
+      - "-n"
+      - "-p python/lammps"
+      - "-l build/liblammps.so"
+      - "-v src/version.h"
+      - "-w build"
+  - name: Install Python
+    command: python3 -m pip install
+    args:
+      - "--target={install_prefix}/lib/python{python_version}/site-packages"
+      - "build/lammps*.whl"

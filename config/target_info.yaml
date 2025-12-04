@@ -1,0 +1,12 @@
+name: lammps
+url_pattern: "https://github.com/lammps/lammps/releases/download/{category}_{version}/lammps-src-{version}.tar.gz"
+targets:
+  - category: stable
+    version: 22Jul2025_update2
+    checksum: sha256:dcfc80a7211592fbebea4dcb99289ea197458900ad2ac57bf937280023d9856f
+  - category: stable
+    version: 22Jul2025_update1
+    checksum: sha256:0864988973c441a18d58fdcdb0e51aaece96815fbed1f318a0b3bfa09e909594
+  - category: stable
+    version: 22Jul2025
+    checksum: sha256:5f5df1535065ffc0c7229a31f32f7f68ffd8deb31e7bd8f3770413890c46ad57
