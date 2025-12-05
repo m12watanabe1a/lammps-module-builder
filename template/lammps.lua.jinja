@@ -1,0 +1,21 @@
+---
+--- THIS FILE IS GENERATED AUTOMATICALLY DO NOT EDIT MANUALLY.
+---
+
+help([[
+LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
+]])
+
+whatis("Name: LAMMPS")
+whatis("Version: {{ version }}")
+whatis("Description: LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator")
+whatis("URL: https://www.lammps.org")
+
+local lammps_root = "{{ install_prefix }}"
+local lammps_python_root = "{{ python_install_prefix }}"
+
+prepend_path("PATH", pathJoin(lammps_root, "bin"))
+prepend_path("LD_LIBRARY_PATH", pathJoin(lammps_root, "lib"))
+prepend_path("CPATH", pathJoin(lammps_root, "include"))
+prepend_path("CMAKE_PREFIX_PATH", lammps_root)
+prepend_path("PYTHONPATH", lammps_python_root)

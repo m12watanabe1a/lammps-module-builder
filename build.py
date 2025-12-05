@@ -7,6 +7,7 @@ from pathlib import Path
 import tempfile
 import subprocess
 import glob
+from jinja2 import Environment, FileSystemLoader
 
 
 def verify_sha256(file_path: str | os.PathLike[str], expected_sha256: str) -> bool:
@@ -81,17 +82,11 @@ def download_and_extract_all(
     return ret
 
 
-def build_target(
-    folder: str | os.PathLike[str], recipe: dict, install_prefix: str | os.PathLike[str]
-) -> None:
+def build_target(folder: str | os.PathLike[str], recipe: dict, variables: dict) -> None:
     """Build the target using the provided recipe."""
     original_cwd = os.getcwd()
 
     def eval_variables(args: list[str]) -> list[str]:
-        variables = {
-            "install_prefix": install_prefix,
-            "python_version": f"{sys.version_info.major}.{sys.version_info.minor}",
-        }
         tmp = []
         for arg in args:
             for var in variables:
@@ -130,14 +125,39 @@ def build_target(
         os.chdir(original_cwd)
 
 
+def generate_modulefile(
+    template: str | os.PathLike[str],
+    *,
+    output: str | os.PathLike[str],
+    config: dict,
+) -> None:
+    """Generate modulefile for the installed target."""
+    print(f"Generating modulefile: {Path(template).parent} -> {output}")
+    env = Environment(
+        loader=FileSystemLoader(Path(template).parent),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    print(env.list_templates())
+    template_obj = env.get_template(Path(template).name)
+    rendered_content = template_obj.render(config)
+    with open(output, "w") as f:
+        f.write(rendered_content)
+
+
 def main():
     THIS_SCRIPT_DIR = Path(__file__).parent.resolve()
+    OUTPUT_DIR = THIS_SCRIPT_DIR
     SRC_DIR = THIS_SCRIPT_DIR / "src"
     CONFIG_DIR = THIS_SCRIPT_DIR / "config"
-    INSTALL_BASE_DIR = THIS_SCRIPT_DIR / "modules"
+    TEMPLATE_DIR = THIS_SCRIPT_DIR / "template"
+
+    MODULES_DIR = OUTPUT_DIR / "modules"
+    MODULEFILES_DIR = OUTPUT_DIR / "modulefiles"
 
     target_info_filename = CONFIG_DIR / "target_info.yaml"
     recipe_filename = CONFIG_DIR / "recipe.yaml"
+    modulefile_template = TEMPLATE_DIR / "lammps.lua.jinja"
     no_cache: bool = False
 
     target_info = yaml.safe_load(target_info_filename.read_text())
@@ -148,12 +168,28 @@ def main():
         target_info["targets"], target_info["url_pattern"], SRC_DIR, no_cache
     )
 
-    # Build
     for src, info in zip(src_folders, target_info["targets"], strict=True):
-        install_dir = INSTALL_BASE_DIR / "{name}_{category}_{version}".format(
+        install_prefix = MODULES_DIR / "{name}_{category}_{version}".format(
             **(info | target_info)
         )
-        build_target(src, build_recipe, install_dir)
+        variables = {
+            "install_prefix": install_prefix,
+            "python_install_prefix": install_prefix
+            / "lib"
+            / f"python{sys.version_info.major}.{sys.version_info.minor}"
+            / "site-packages",
+        }
+
+        # Build & Install
+        build_target(src, build_recipe, variables)
+
+        # Generate modulefiles
+        generate_modulefile(
+            template=modulefile_template,
+            output=MODULEFILES_DIR
+            / "{name}_{category}_{version}.lua".format(**(info | target_info)),
+            config=variables,
+        )
 
 
 if __name__ == "__main__":
