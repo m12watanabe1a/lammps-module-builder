@@ -24,15 +24,20 @@ def verify_sha256(file_path: str | os.PathLike[str], expected_sha256: str) -> bo
     return sha256.hexdigest() == expected_sha256
 
 
-def download(url: str, dest_dir: str | os.PathLike[str], checksum: str) -> str:
+def download(url: str, dest_dir: str | os.PathLike[str], checksum: str | None) -> str:
     """Download file from url to dest."""
     dest = Path(dest_dir) / Path(url).name
+    logger.info(f"Downloading from {url}...")
     subprocess.run(
         ["wget", "-O", str(dest), str(url)],
         check=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+
+    if checksum is None:
+        logger.warning("No checksum provided, skipping verification.")
+        return str(dest)
 
     checksum_type, checksum_value = checksum.split(":")
     if checksum_type == "sha256":
@@ -47,18 +52,29 @@ def download(url: str, dest_dir: str | os.PathLike[str], checksum: str) -> str:
 def extract_archive(
     archive_path: str | os.PathLike[str], extract_to: str | os.PathLike[str]
 ) -> None:
-    """Extract a tar.gz archive."""
-    import tarfile
+    """Extract archive to the specified directory."""
 
     original_cwd = os.getcwd()
+    extract_path = Path(extract_to).resolve()
 
     os.chdir(Path(archive_path).parent)
     try:
-        with tarfile.open(archive_path, "r:gz") as tar:
-            extracted_dir = tar.getnames()[0]
-            tar.extractall()
+        suffix = "".join(Path(archive_path).suffixes)
+
+        if suffix == ".zip":
+            raise NotImplementedError("zip format is not supported yet.")
+        if suffix == ".tar.gz" or suffix == ".tgz":
+            import tarfile
+
+            with tarfile.open(archive_path, "r:gz") as tar:
+                extracted_dir = tar.getnames()[0]
+                tar.extractall()
+        else:
+            raise ValueError(f"Unsupported archive format: {suffix}")
         subprocess.run(
-            ["mv", extracted_dir, extract_to], check=True, stdout=subprocess.DEVNULL
+            ["mv", str(Path(extracted_dir).resolve()), str(extract_path)],
+            check=True,
+            stdout=subprocess.DEVNULL,
         )
     finally:
         os.chdir(original_cwd)
@@ -82,7 +98,7 @@ def download_and_extract_all(
         extracted_name = Path(url).name.split(".")[0]
         ret.append(dest_path / extracted_name)
         if (dest_path / extracted_name).exists() and not no_cache:
-            logger.warning(
+            logger.info(
                 f"{(dest_path / extracted_name)} already exists. "
                 "Skipping download and extraction."
             )
@@ -99,7 +115,7 @@ def download_and_extract_all(
                     stdout=subprocess.DEVNULL,
                 )
         with tempfile.TemporaryDirectory() as tempdir:
-            tar_gz_file = download(url, tempdir, target["checksum"])
+            tar_gz_file = download(url, tempdir, target.get("checksum", None))
             extract_archive(tar_gz_file, dest_path / extracted_name)
 
     return ret
@@ -184,13 +200,13 @@ def main(
     src: str | os.PathLike[str],
     no_cache: bool = False,
 ):
-    MODULES_DIR = Path(prefix) / "modules"
-    MODULEFILES_DIR = Path(prefix) / "modulefiles"
-
     target_info = yaml.safe_load(Path(config_filename).read_text())
     build_recipe = yaml.safe_load(Path(recipe_filename).read_text())
 
     name = target_info["name"]
+
+    MODULES_DIR = Path(prefix) / name
+    MODULEFILES_DIR = Path(prefix) / "modulefiles"
 
     # Download & Extract
     src_folders: list[Path] = download_and_extract_all(
@@ -199,17 +215,20 @@ def main(
 
     for src, info in zip(src_folders, target_info["targets"], strict=True):
         install_prefix = MODULES_DIR / f"{name}_{info['category']}_{info['version']}"
-        variables = {
-            "install_prefix": install_prefix,
-            "python_install_prefix": install_prefix
+        python_install_prefix = (
+            install_prefix
             / "lib"
             / f"python{sys.version_info.major}.{sys.version_info.minor}"
-            / "site-packages",
+            / "site-packages"
+        )
+        variables = {
+            "install_prefix": install_prefix,
+            "python_install_prefix": python_install_prefix,
         }
 
         # Check destination before building
-        if install_prefix.exists() and not no_cache:
-            logger.warning(
+        if (install_prefix.exists() or python_install_prefix.exists()) and not no_cache:
+            logger.info(
                 f"{install_prefix} already exists. Skipping build & install."
             )
             continue
@@ -245,10 +264,7 @@ def setup_args():
     default_config = THIS_SCRIPT_DIR / "config" / "target.yaml"
     default_template = THIS_SCRIPT_DIR / "template" / "lammps.lua.jinja"
     default_src = THIS_SCRIPT_DIR / "src"
-    parser = argparse.ArgumentParser(
-        description="Build LAMMPS from source.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
+    parser = argparse.ArgumentParser(description="Build LAMMPS from source.")
     parser.add_argument(
         "--prefix",
         type=str,
@@ -258,32 +274,36 @@ def setup_args():
     parser.add_argument(
         "--recipe",
         type=str,
-        default=str(default_recipe.relative_to(THIS_SCRIPT_DIR)),
-        help="Path to the build recipe configuration file.",
+        default=str(default_recipe),
+        help="Path to the build recipe configuration file. "
+        f"(defult: {default_recipe.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--config",
         type=str,
-        default=str(default_config.relative_to(THIS_SCRIPT_DIR)),
-        help="Path to the target info configuration file.",
+        default=str(default_config),
+        help="Path to the target info configuration file. "
+        f"(defult: {default_config.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--template",
         type=str,
-        default=str(default_template.relative_to(THIS_SCRIPT_DIR)),
-        help="Path to the modulefile template.",
+        default=str(default_template),
+        help="Path to the modulefile template."
+        f"(defult: {default_template.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--src",
         type=str,
-        default=str(default_src.relative_to(THIS_SCRIPT_DIR)),
-        help="Path to the source directory. If not exists, source files will be downloaded here.",
+        default=str(default_src),
+        help="Path to the source directory. If not exists, source files will be downloaded here. "
+        f"(defult: {default_src.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--log-level",
         type=str,
-        default="INFO",
-        help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).",
+        default="ERROR",
+        help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL). (default: ERROR)",
     )
     parser.add_argument(
         "--no-cache",
