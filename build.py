@@ -138,9 +138,10 @@ def generate_modulefile(
         trim_blocks=True,
         lstrip_blocks=True,
     )
-    print(env.list_templates())
     template_obj = env.get_template(Path(template).name)
     rendered_content = template_obj.render(config)
+    if not Path(output).parent.exists():
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
     with open(output, "w") as f:
         f.write(rendered_content)
 
@@ -186,8 +187,8 @@ def main():
         # Generate modulefiles
         generate_modulefile(
             template=modulefile_template,
-            output=MODULEFILES_DIR
-            / "{name}_{category}_{version}.lua".format(**(info | target_info)),
+            output=MODULEFILES_DIR / target_info["name"]
+            / "{category}_{version}.lua".format(**info),
             config=variables,
         )
 
