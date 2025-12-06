@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import os
 import sys
 import yaml
@@ -8,6 +9,7 @@ import tempfile
 import subprocess
 import glob
 from jinja2 import Environment, FileSystemLoader
+import logging
 
 
 def verify_sha256(file_path: str | os.PathLike[str], expected_sha256: str) -> bool:
@@ -54,7 +56,7 @@ def extract_archive(
     finally:
         os.chdir(original_cwd)
 
-    print(f"Extracted {archive_path} -> {extract_to}")
+    logger.info(f"Extracted {archive_path} -> {extract_to}")
 
 
 def download_and_extract_all(
@@ -73,7 +75,7 @@ def download_and_extract_all(
         extracted_name = Path(url).name.split(".")[0]
         ret.append(dest_path / extracted_name)
         if (dest_path / extracted_name).exists() and not no_cache:
-            print(f"Target {url} already exists, skipping download.")
+            logger.warning(f"Target {url} already exists, skipping download.")
             continue
         with tempfile.TemporaryDirectory() as tempdir:
             tar_gz_file = download(url, tempdir, target["checksum"])
@@ -116,7 +118,7 @@ def build_target(folder: str | os.PathLike[str], recipe: dict, variables: dict) 
 
     try:
         for i, step in enumerate(recipe["steps"]):
-            print(f"Run {i + 1}/{len(recipe['steps'])}: {step['name']}")
+            logger.info(f"Run {i + 1}/{len(recipe['steps'])}: {step['name']}")
             os.chdir(Path(folder))
             command: str = step["command"]
             args: list[str] = args_filter(step.get("args"))
@@ -132,7 +134,7 @@ def generate_modulefile(
     config: dict,
 ) -> None:
     """Generate modulefile for the installed target."""
-    print(f"Generating modulefile: {Path(template).parent} -> {output}")
+    logger.info(f"Generating modulefile: {Path(template).parent} -> {output}")
     env = Environment(
         loader=FileSystemLoader(Path(template).parent),
         trim_blocks=True,
@@ -146,27 +148,25 @@ def generate_modulefile(
         f.write(rendered_content)
 
 
-def main():
-    THIS_SCRIPT_DIR = Path(__file__).parent.resolve()
-    OUTPUT_DIR = THIS_SCRIPT_DIR
-    SRC_DIR = THIS_SCRIPT_DIR / "src"
-    CONFIG_DIR = THIS_SCRIPT_DIR / "config"
-    TEMPLATE_DIR = THIS_SCRIPT_DIR / "template"
+def main(
+    *,
+    prefix: str | os.PathLike[str],
+    config_filename: str | os.PathLike[str],
+    recipe_filename: str | os.PathLike[str],
+    modulefile_template: str | os.PathLike[str],
+    src: str | os.PathLike[str],
+    no_cache: bool = False,
+):
 
-    MODULES_DIR = OUTPUT_DIR / "modules"
-    MODULEFILES_DIR = OUTPUT_DIR / "modulefiles"
+    MODULES_DIR = Path(prefix) / "modules"
+    MODULEFILES_DIR = Path(prefix) / "modulefiles"
 
-    target_info_filename = CONFIG_DIR / "target_info.yaml"
-    recipe_filename = CONFIG_DIR / "recipe.yaml"
-    modulefile_template = TEMPLATE_DIR / "lammps.lua.jinja"
-    no_cache: bool = False
-
-    target_info = yaml.safe_load(target_info_filename.read_text())
-    build_recipe = yaml.safe_load(recipe_filename.read_text())
+    target_info = yaml.safe_load(Path(config_filename).read_text())
+    build_recipe = yaml.safe_load(Path(recipe_filename).read_text())
 
     # Download & Extract
     src_folders: list[Path] = download_and_extract_all(
-        target_info["targets"], target_info["url_pattern"], SRC_DIR, no_cache
+        target_info["targets"], target_info["url_pattern"], src, no_cache
     )
 
     for src, info in zip(src_folders, target_info["targets"], strict=True):
@@ -187,11 +187,87 @@ def main():
         # Generate modulefiles
         generate_modulefile(
             template=modulefile_template,
-            output=MODULEFILES_DIR / target_info["name"]
+            output=MODULEFILES_DIR
+            / target_info["name"]
             / "{category}_{version}.lua".format(**info),
             config=variables,
         )
 
 
+def setup_args():
+    THIS_SCRIPT_DIR = Path(__file__).parent.resolve()
+    default_prefix = Path.home() / ".local" / "opt"
+    default_recipe = THIS_SCRIPT_DIR / "config" / "recipe.yaml"
+    default_config = THIS_SCRIPT_DIR / "config" / "target_info.yaml"
+    default_template = THIS_SCRIPT_DIR / "template" / "lammps.lua.jinja"
+    default_src = THIS_SCRIPT_DIR / "src"
+    parser = argparse.ArgumentParser(
+        description="Build LAMMPS from source.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--prefix",
+        type=str,
+        default=str(default_prefix),
+        help="Installation prefix directory.",
+    )
+    parser.add_argument(
+        "--recipe",
+        type=str,
+        default=str(default_recipe),
+        help="Path to the build recipe configuration file.",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=str(default_config),
+        help="Path to the target info configuration file.",
+    )
+    parser.add_argument(
+        "--template",
+        type=str,
+        default=str(default_template),
+        help="Path to the modulefile template.",
+    )
+    parser.add_argument(
+        "--src",
+        type=str,
+        default=str(default_src),
+        help="Path to the source directory. If not exists, source files will be downloaded here.",
+    )
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).",
+    )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Disable caching of downloaded and extracted sources.",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    main()
+    args = setup_args()
+
+    logging.basicConfig(level=getattr(logging, args.log_level.upper(), None))
+    logger = logging.getLogger(__name__)
+
+    try:
+        assert Path(args.recipe).exists(), f"Recipe file not found: {args.recipe}"
+        assert Path(args.config).exists(), f"Config file not found: {args.config}"
+        assert Path(args.template).exists(), f"Template file not found: {args.template}"
+
+        main(
+            prefix=args.prefix,
+            recipe_filename=args.recipe,
+            config_filename=args.config,
+            modulefile_template=args.template,
+            src=args.src,
+            no_cache=args.no_cache,
+        )
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        sys.exit(1)
