@@ -105,6 +105,7 @@ steps:
       # - "-D PKG_VORONOI=ON"
       # - "-D PKG_VTK=ON"
       # - "-D PKG_YAFF=ON"
+      - "--fresh"
   - name: Build
     command: cmake --build build
   - name: Install
