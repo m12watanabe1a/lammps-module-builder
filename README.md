@@ -9,8 +9,8 @@ It simplifies the process of compiling LAMMPS with various version, configuratio
 - Generation of module files for easy environment management.
 - Customizable build recipes and target configurations.
 
-
 ## Requirements
+<details>
 - Python 3.8 or higher
   - Pyyaml
   - Jinja2
@@ -23,15 +23,17 @@ Also you need to have development tools and libraries installed for building LAM
 - FFT library (e.g., FFTW)
 - Other dependencies as required by specific LAMMPS packages.
 Please refer to the [LAMMPS building guide](https://docs.lammps.org/Build_cmake.html) for detailed information on required dependencies.
-
+</details>
 
 ## Setup
+<details>
 1. Setup a virtual environment and install dependencies:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+</details>
 
 ## Install LAMMPS Modules
 1. Run the install script to build and install LAMMPS modules:
