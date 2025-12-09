@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
-import sys
-import yaml
-from pathlib import Path
-import tempfile
-import subprocess
 import glob
-from jinja2 import Environment, FileSystemLoader
 import logging
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+import yaml
+from jinja2 import Environment, FileSystemLoader
 
 from lammps_module_builder.build_info import BuildInfo
 
@@ -262,7 +263,7 @@ def main(
         build_info.add_file(lua_file)
 
         logger.info(f"Installed {name} {info['version']} ({info['category']})")
-    
+
     build_info.save()
 
 
@@ -278,35 +279,35 @@ def setup_args():
         "--prefix",
         type=str,
         default=str(default_prefix),
-        help="Installation prefix directory.",
+        help="Installation prefix directory. (default: ~/.local/opt)",
     )
     parser.add_argument(
         "--recipe",
         type=str,
         default=str(default_recipe),
         help="Path to the build recipe configuration file. "
-        f"(defult: {default_recipe.relative_to(THIS_SCRIPT_DIR)})",
+        f"(default: {default_recipe.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--config",
         type=str,
         default=str(default_config),
         help="Path to the target info configuration file. "
-        f"(defult: {default_config.relative_to(THIS_SCRIPT_DIR)})",
+        f"(default: {default_config.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--template",
         type=str,
         default=str(default_template),
         help="Path to the modulefile template."
-        f"(defult: {default_template.relative_to(THIS_SCRIPT_DIR)})",
+        f"(default: {default_template.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--src",
         type=str,
         default=str(default_src),
         help="Path to the source directory. If not exists, source files will be downloaded here. "
-        f"(defult: {default_src.relative_to(THIS_SCRIPT_DIR)})",
+        f"(default: {default_src.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--log-level",
