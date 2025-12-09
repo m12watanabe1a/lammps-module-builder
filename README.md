@@ -26,12 +26,7 @@ Please refer to the [LAMMPS building guide](https://docs.lammps.org/Build_cmake.
 
 
 ## Setup
-1. Clone this repository:
-```bash
-git clone https://github.com/yourusername/lammps-modules.git && cd lammps-modules
-```
-
-2. Setup a virtual environment and install dependencies:
+1. Setup a virtual environment and install dependencies:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
