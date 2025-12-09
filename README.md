@@ -25,7 +25,7 @@ Also you need to have development tools and libraries installed for building LAM
 Please refer to the [LAMMPS building guide](https://docs.lammps.org/Build_cmake.html) for detailed information on required dependencies.
 
 
-## Usage
+## Setup
 1. Clone this repository:
 ```bash
 git clone https://github.com/yourusername/lammps-modules.git && cd lammps-modules
@@ -38,15 +38,21 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-3. Run the setup script to build and install LAMMPS modules:
+## Install LAMMPS Modules
+1. Run the install script to build and install LAMMPS modules:
 ```bash
-./setup.py
+./install.py
 ```
 
-4. Load the installed LAMMPS module using the module command:
+2. Load the installed LAMMPS module using the module command:
 ```bash
 module use ~/.local/opt/modulefiles
 module load lammps/<version>
+```
+
+## Uninstall LAMMPS Modules
+```bash
+./uninstall.py
 ```
 
 ## FAQ

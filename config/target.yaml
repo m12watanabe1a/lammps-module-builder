@@ -1,31 +1,63 @@
 name: lammps
-url_pattern: "https://github.com/lammps/lammps/releases/download/{category}_{version}/lammps-src-{version}.tar.gz"
+sources: {
+  "release": "https://github.com/lammps/lammps/releases/download/{category}_{version}/lammps-src-{version}.tar.gz",
+  "archive": "https://github.com/lammps/lammps/archive/refs/tags/{category}_{version}.tar.gz"
+}
 targets:
   - category: stable
     version: 22Jul2025_update2
     checksum: sha256:dcfc80a7211592fbebea4dcb99289ea197458900ad2ac57bf937280023d9856f
+    source: release
 
-  - category: stable
-    version: 22Jul2025_update1
-    checksum: sha256:0864988973c441a18d58fdcdb0e51aaece96815fbed1f318a0b3bfa09e909594
+  # - category: stable
+  #   version: 22Jul2025_update1
+  #   checksum: sha256:0864988973c441a18d58fdcdb0e51aaece96815fbed1f318a0b3bfa09e909594
+  #   source: release
+  
 
-  - category: stable
-    version: 22Jul2025
-    checksum: sha256:5f5df1535065ffc0c7229a31f32f7f68ffd8deb31e7bd8f3770413890c46ad57
+  # - category: stable
+  #   version: 22Jul2025
+  #   checksum: sha256:5f5df1535065ffc0c7229a31f32f7f68ffd8deb31e7bd8f3770413890c46ad57
+  #   source: release
 
   - category: stable
     version: 29Aug2024_update4
     checksum: sha256:03dd5cc6e5cd4b053591ee4e728d82acc4d74fce4f85c16dd9b3a3e4bf1cf6b5
+    source: release
   
-  - category: stable
-    version: 29Aug2024_update3
-    checksum: sha256:15172ec02037d3a5db3d993d143c8fb07e953437b9d4f2fdc95ac176c7e3a2db
+  # - category: stable
+  #   version: 29Aug2024_update3
+  #   checksum: sha256:15172ec02037d3a5db3d993d143c8fb07e953437b9d4f2fdc95ac176c7e3a2db
+  #   source: release
+
+  # - category: stable
+  #   version: 29Aug2024_update2
+  #   source: archive
+  
+  # - category: stable
+  #   version: 29Aug2024_update1
+  #   source: archive
+  
+  # - category: stable
+  #   version: 29Aug2024
+  #   source: archive
 
   - category: stable
-    version: 29Aug2024_update2
+    version: 2Aug2023_update4
+    source: archive
   
-  - category: stable
-    version: 29Aug2024_update1
-  
-  - category: stable
-    version: 29Aug2024
+  # - category: stable
+  #   version: 2Aug2023_update3
+  #   source: archive
+
+  # - category: stable
+  #   version: 2Aug2023_update2
+  #   source: archive
+
+  # - category: stable
+  #   version: 2Aug2023_update1
+  #   source: archive
+
+  # - category: stable
+  #   version: 2Aug2023
+  #   source: archive

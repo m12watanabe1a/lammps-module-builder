@@ -11,6 +11,8 @@ import glob
 from jinja2 import Environment, FileSystemLoader
 import logging
 
+from lammps_module_builder.build_info import BuildInfo
+
 
 def verify_sha256(file_path: str | os.PathLike[str], expected_sha256: str) -> bool:
     """Verify the SHA256 checksum of a file."""
@@ -84,7 +86,7 @@ def extract_archive(
 
 def download_and_extract_all(
     targets: list[dict],
-    url_pattern: str,
+    sources: dict[str, str],
     dest_dir: str | os.PathLike[str],
     no_cache: bool = False,
 ) -> list[Path]:
@@ -94,7 +96,7 @@ def download_and_extract_all(
 
     ret: list[Path] = []
     for target in targets:
-        url: str = url_pattern.format(**target)
+        url: str = (sources[target["source"]]).format(**target)
         extracted_name = Path(url).name.split(".")[0]
         ret.append(dest_path / extracted_name)
         if (dest_path / extracted_name).exists() and not no_cache:
@@ -200,6 +202,8 @@ def main(
     src: str | os.PathLike[str],
     no_cache: bool = False,
 ):
+    build_info = BuildInfo.load()
+
     target_info = yaml.safe_load(Path(config_filename).read_text())
     build_recipe = yaml.safe_load(Path(recipe_filename).read_text())
 
@@ -210,7 +214,7 @@ def main(
 
     # Download & Extract
     src_folders: list[Path] = download_and_extract_all(
-        target_info["targets"], target_info["url_pattern"], src, no_cache
+        target_info["targets"], target_info["sources"], src, no_cache
     )
 
     for src, info in zip(src_folders, target_info["targets"], strict=True):
@@ -226,13 +230,6 @@ def main(
             "python_install_prefix": python_install_prefix,
         }
 
-        # Check destination before building
-        if (install_prefix.exists() or python_install_prefix.exists()) and not no_cache:
-            logger.info(
-                f"{install_prefix} already exists. Skipping build & install."
-            )
-            continue
-
         if no_cache:
             if install_prefix.exists():
                 logger.info(f"Removing existing installation at {install_prefix}")
@@ -245,16 +242,28 @@ def main(
         logger.info(f"Installing: {install_prefix}")
 
         # Build & Install
-        build_target(src, build_recipe, variables)
+        try:
+            build_target(src, build_recipe, variables)
+        except subprocess.CalledProcessError as _e:
+            logger.error(
+                f"Build failed for {name} {info['version']} ({info['category']})"
+            )
+            logger.error(f"Check log file at: {Path(src) / 'log' / 'build.log'}")
+            sys.exit(1)
+        build_info.add_file(install_prefix)
 
         # Generate modulefiles
+        lua_file = MODULEFILES_DIR / name / "{category}_{version}.lua".format(**info)
         generate_modulefile(
             template=modulefile_template,
-            output=MODULEFILES_DIR / name / "{category}_{version}.lua".format(**info),
+            output=lua_file,
             config=variables,
         )
+        build_info.add_file(lua_file)
 
         logger.info(f"Installed {name} {info['version']} ({info['category']})")
+    
+    build_info.save()
 
 
 def setup_args():
