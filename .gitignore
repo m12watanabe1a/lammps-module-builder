@@ -218,3 +218,5 @@ __marimo__/
 src/*
 build_info.json
 
+# Ignore configuration files
+config/*.yaml
