@@ -2,11 +2,10 @@
 # Following variables are given by the build system:
 # - {install_prefix}: The installation prefix path
 
-name: LAMMPS Basic Build for Linux
-steps:
-  - name: Configure
-    command: cmake ./cmake
-    args:
+action:
+  - name: cmake_configure
+    command: "cmake ./cmake"
+    args: 
       - "-B build"
       - "-G Ninja"
       - "-D CMAKE_INSTALL_PREFIX={install_prefix}"
@@ -106,20 +105,29 @@ steps:
       # - "-D PKG_VTK=ON"
       # - "-D PKG_YAFF=ON"
       - "--fresh"
-  - name: Build
-    command: cmake --build build
-  - name: Install
-    command: cmake --install build
-  - name: Build Python
-    command: python3 python/install.py
+  - name: cmake_build
+    command: "cmake --build build"
+  - name: cmake_install
+    command: "cmake --install build"
+  - name: linux_build_python
+    command: "python3 python/install.py"
     args:
       - "-n"
       - "-p python/lammps"
       - "-l build/liblammps.so"
       - "-v src/version.h"
       - "-w build"
-  - name: Install Python
-    command: python3 -m pip install
+  - name: darwin_build_python
+    command: "python3 python/install.py"
+    args:
+      - "-n"
+      - "-p python/lammps"
+      - "-l build/liblammps.dylib"
+      - "-v src/version.h"
+      - "-w build"
+  - name: install_python
+    command: "python3 -m pip install"
     args:
       - "--target={python_install_prefix}"
       - "build/lammps*.whl"
+  

@@ -125,7 +125,9 @@ def download_and_extract_all(
     return ret
 
 
-def build_target(folder: str | os.PathLike[str], recipe: dict, variables: dict) -> None:
+def build_target(
+    folder: str | os.PathLike[str], recipe: dict, variables: dict, action: dict
+) -> None:
     """Build the target using the provided recipe."""
     original_cwd = os.getcwd()
 
@@ -163,6 +165,17 @@ def build_target(folder: str | os.PathLike[str], recipe: dict, variables: dict) 
     try:
         with open(log_file, "w") as f:
             for i, step in enumerate(recipe["steps"]):
+                # If step has use: then run it from action
+                if "use" in step:
+                    matched_steps = [
+                        s for s in action["action"] if s["name"] == step["use"]
+                    ]
+                    if not matched_steps:
+                        raise ValueError(f"Action step not found: {step['use']}")
+                    if len(matched_steps) > 1:
+                        raise ValueError(f"Multiple action steps found: {step['use']}")
+                    step = matched_steps[0]
+
                 logger.info(f"Run {i + 1}/{len(recipe['steps'])}: {step['name']}")
                 os.chdir(Path(folder))
                 command: list[str] = step["command"].split()
@@ -199,6 +212,7 @@ def main(
     prefix: str | os.PathLike[str],
     config_filename: str | os.PathLike[str],
     recipe_filename: str | os.PathLike[str],
+    action_filename: str | os.PathLike[str],
     modulefile_template: str | os.PathLike[str],
     src: str | os.PathLike[str],
     no_cache: bool = False,
@@ -207,6 +221,7 @@ def main(
 
     target_info = yaml.safe_load(Path(config_filename).read_text())
     build_recipe = yaml.safe_load(Path(recipe_filename).read_text())
+    action = yaml.safe_load(Path(action_filename).read_text())
 
     name = target_info["name"]
 
@@ -244,7 +259,7 @@ def main(
 
         # Build & Install
         try:
-            build_target(src, build_recipe, variables)
+            build_target(src, build_recipe, variables, action=action)
         except subprocess.CalledProcessError as _e:
             logger.error(
                 f"Build failed for {name} {info['version']} ({info['category']})"
@@ -267,14 +282,24 @@ def main(
     build_info.save()
 
 
+def get_default(filename: str | os.PathLike[str]) -> Path:
+    filepath = Path(filename)
+    if filepath.exists():
+        return filepath
+
+    return filepath.with_name(f"{filepath.stem}.default{filepath.suffix}")
+
+
 def setup_args():
     THIS_SCRIPT_DIR = Path(__file__).parent.resolve()
     default_prefix = Path.home() / ".local" / "opt"
-    default_recipe = (
+    default_recipe = get_default(
         THIS_SCRIPT_DIR / "config" / f"recipe-{platform.system().lower()}.yaml"
     )
-    default_config = THIS_SCRIPT_DIR / "config" / "target.yaml"
-    default_template = THIS_SCRIPT_DIR / "template" / "lammps.lua.jinja"
+    default_action = get_default(THIS_SCRIPT_DIR / "config" / "action.yaml")
+    default_config = get_default(THIS_SCRIPT_DIR / "config" / "target.yaml")
+    default_template = get_default(THIS_SCRIPT_DIR / "template" / "lammps.lua.jinja")
+
     default_src = THIS_SCRIPT_DIR / "src"
     parser = argparse.ArgumentParser(description="Build LAMMPS from source.")
     parser.add_argument(
@@ -296,6 +321,13 @@ def setup_args():
         default=str(default_config),
         help="Path to the target info configuration file. "
         f"(default: {default_config.relative_to(THIS_SCRIPT_DIR)})",
+    )
+    parser.add_argument(
+        "--action",
+        type=str,
+        default=str(default_action),
+        help="Path to the action configuration file. "
+        f"(default: {default_action.relative_to(THIS_SCRIPT_DIR)})",
     )
     parser.add_argument(
         "--template",
@@ -366,6 +398,7 @@ if __name__ == "__main__":
         prefix=args.prefix,
         recipe_filename=args.recipe,
         config_filename=args.config,
+        action_filename=args.action,
         modulefile_template=args.template,
         src=args.src,
         no_cache=args.no_cache,

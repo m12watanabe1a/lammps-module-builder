@@ -1,0 +1,7 @@
+name: LAMMPS Basic Build for Linux
+steps:
+  - use: cmake_configure
+  - use: cmake_build
+  - use: cmake_install
+  - use: linux_build_python
+  - use: install_python
