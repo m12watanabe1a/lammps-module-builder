@@ -4,6 +4,7 @@ import argparse
 import glob
 import logging
 import os
+import platform
 import subprocess
 import sys
 import tempfile
@@ -130,7 +131,6 @@ def build_target(folder: str | os.PathLike[str], recipe: dict, variables: dict) 
 
     log_file = Path(folder) / "log" / "build.log"
     log_file.parent.mkdir(parents=True, exist_ok=True)
-    logger.info(f"log will be saved to: {log_file}")
 
     def eval_variables(args: list[str]) -> list[str]:
         tmp = []
@@ -270,7 +270,9 @@ def main(
 def setup_args():
     THIS_SCRIPT_DIR = Path(__file__).parent.resolve()
     default_prefix = Path.home() / ".local" / "opt"
-    default_recipe = THIS_SCRIPT_DIR / "config" / "recipe.yaml"
+    default_recipe = (
+        THIS_SCRIPT_DIR / "config" / f"recipe-{platform.system().lower()}.yaml"
+    )
     default_config = THIS_SCRIPT_DIR / "config" / "target.yaml"
     default_template = THIS_SCRIPT_DIR / "template" / "lammps.lua.jinja"
     default_src = THIS_SCRIPT_DIR / "src"
@@ -334,7 +336,17 @@ if __name__ == "__main__":
 
         handler = colorlog.StreamHandler()
         handler.setFormatter(
-            colorlog.ColoredFormatter(f"%(log_color)s{fmt}%(reset)s", datefmt=datefmt)
+            colorlog.ColoredFormatter(
+                f"%(log_color)s{fmt}%(reset)s",
+                datefmt=datefmt,
+                log_colors={
+                    "DEBUG": "cyan",
+                    "INFO": "white",
+                    "WARNING": "yellow",
+                    "ERROR": "red",
+                    "CRITICAL": "bold_red",
+                },
+            )
         )
     except ImportError:
         handler = logging.StreamHandler(sys.stdout)
