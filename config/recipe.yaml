@@ -2,7 +2,7 @@
 # Following variables are given by the build system:
 # - {install_prefix}: The installation prefix path
 
-name: LAMMPS Basic Build
+name: LAMMPS Basic Build for Linux
 steps:
   - name: Configure
     command: cmake ./cmake
