@@ -32,6 +32,7 @@ Please refer to the [LAMMPS building guide](https://docs.lammps.org/Build_cmake.
 
 ## Setup
 <details>
+
 1. Setup a virtual environment and install dependencies:
 ```bash
 python3 -m venv .venv
