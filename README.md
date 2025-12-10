@@ -9,6 +9,10 @@ It simplifies the process of compiling LAMMPS with various version, configuratio
 - Generation of module files for easy environment management.
 - Customizable build recipes and target configurations.
 
+## Supported Platforms
+- [x] Linux (WSL on Windows)
+- [x] macOS
+
 ## Requirements
 <details>
 - Python 3.8 or higher
