@@ -292,13 +292,14 @@ def get_default(filename: str | os.PathLike[str]) -> Path:
 
 def setup_args():
     THIS_SCRIPT_DIR = Path(__file__).parent.resolve()
+    CONFIG_DIR = THIS_SCRIPT_DIR / "config"
+    TEMPLATE = THIS_SCRIPT_DIR / "template"
+    pf = platform.system().lower()
     default_prefix = Path.home() / ".local" / "opt"
-    default_recipe = get_default(
-        THIS_SCRIPT_DIR / "config" / f"recipe-{platform.system().lower()}.yaml"
-    )
-    default_action = get_default(THIS_SCRIPT_DIR / "config" / "action.yaml")
-    default_config = get_default(THIS_SCRIPT_DIR / "config" / "target.yaml")
-    default_template = get_default(THIS_SCRIPT_DIR / "template" / "lammps.lua.jinja")
+    default_recipe = get_default(CONFIG_DIR / f"recipe-{pf}.yaml")
+    default_action = get_default(CONFIG_DIR / "action.yaml")
+    default_config = get_default(CONFIG_DIR / "target.yaml")
+    default_template = get_default(TEMPLATE / f"lammps-{pf}.lua.jinja")
 
     default_src = THIS_SCRIPT_DIR / "src"
     parser = argparse.ArgumentParser(description="Build LAMMPS from source.")
