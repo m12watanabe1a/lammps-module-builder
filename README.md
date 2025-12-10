@@ -62,11 +62,24 @@ module load lammps/<version>
 (Although I haven’t actually received any questions yet.)
 
 ### How do I customize the build recipe?
-You can modify the `config/recipe.yaml` file to change build options, packages, and other settings according to your requirements.
+You can copy the default recipe by running:
+```bash
+cp config/recipe.{default.,}yaml
+```
 
+Then, edit the `config/recipe.yaml` file to customize the build steps according to your requirements.
+The CLI automatically uses the customized recipe `config/recipe.yaml` if it exists.
+If you want to use a different recipe file, you can specify it with the `--recipe` argument when running the `setup.py` script.
+The detailed actions (`use: {action_name}`) used in the recipe are defined in the `config/action.default.yaml` file, which you can also customize similarly.
 
 ### How do I add support for additional LAMMPS versions?
-You can update the `config/target.yaml` file to include new LAMMPS versions and their corresponding download URLs and checksums.
+You can also copy the default target configuration by running:
+```bash
+cp config/target.{default.,}yaml
+```
+Then, edit the `config/target.yaml` file to add or modify LAMMPS versions.
+The CLI automatically uses the customized target configuration `config/target.yaml` if it exists.
+If you want to use a different target configuration file, you can specify it with the `--target` argument when running the `setup.py` script.
 
 
 ### Where are the built LAMMPS binaries and module files located?
