@@ -11,6 +11,7 @@ action:
       - "-D CMAKE_INSTALL_PREFIX={install_prefix}"
       - "-D CMAKE_BUILD_TYPE=Release"
       - "-D BUILD_MPI=ON"
+      # - "-D BUILD_OMP=ON"
       - "-D BUILD_SHARED_LIBS=ON"
       - "-D BUILD_PYTHON=ON"
       # - "-D PKG_ADIOS=ON"
