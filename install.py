@@ -273,7 +273,7 @@ def main(
         generate_modulefile(
             template=modulefile_template,
             output=lua_file,
-            config=variables,
+            config=variables | info,
         )
         build_info.add_file(lua_file)
 
