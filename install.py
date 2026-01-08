@@ -125,6 +125,41 @@ def download_and_extract_all(
     return ret
 
 
+def patch_target(folder: str | os.PathLike[str], patches: list[dict]) -> None:
+    """Apply patches to the target source code."""
+    original_cwd = os.getcwd()
+    os.chdir(Path(folder))
+    THIS_SCRIPT_DIR = Path(__file__).parent.resolve()
+    PATCH_ROOT = THIS_SCRIPT_DIR / "patch"
+
+    log_file = Path(folder) / "log" / "patch.log"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        for patch in patches:
+            patch_file = PATCH_ROOT / patch["file"]
+            logger.info(f"Applying patch: {patch['description']}")
+            out = subprocess.run(
+                ["patch", "--dry-run", "-p1", "-i", str(patch_file)],
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            ).stdout
+
+            if any(k in out for k in ["Reversed", "already applied"]):
+                logger.info(f"Patch already applied, skipping: {patch['file']}")
+                continue
+            with open(log_file, "a") as f:
+                subprocess.run(
+                    ["patch", "-p1", "-N", "-i", str(patch_file)],
+                    check=True,
+                    stdout=f,
+                    stderr=f,
+                )
+    finally:
+        os.chdir(original_cwd)
+
+
 def build_target(
     folder: str | os.PathLike[str], recipe: dict, variables: dict, action: dict
 ) -> None:
@@ -256,6 +291,17 @@ def main(
                 )
 
         logger.info(f"Installing: {install_prefix}")
+
+        # Apply patches if any
+        if "patches" in info:
+            try:
+                patch_target(src, info["patches"])
+            except subprocess.CalledProcessError as _e:
+                logger.error(
+                    f"Failed to apply patches for {name} {info['version']} ({info['category']})"
+                )
+                logger.error(f"Check log file at: {Path(src) / 'log' / 'patch.log'}")
+                sys.exit(1)
 
         # Build & Install
         try:

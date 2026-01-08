@@ -1,0 +1,13 @@
+diff --git a/cmake/Modules/Packages/ML-HDNNP.cmake b/cmake/Modules/Packages/ML-HDNNP.cmake
+index 99017f222d..03f4660273 100644
+--- a/cmake/Modules/Packages/ML-HDNNP.cmake
++++ b/cmake/Modules/Packages/ML-HDNNP.cmake
+@@ -60,7 +60,7 @@ if(DOWNLOAD_N2P2)
+   set(N2P2_BUILD_FLAGS "${CMAKE_SHARED_LIBRARY_CXX_FLAGS} ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BTYPE}} ${N2P2_CXX_STD}")
+   set(N2P2_BUILD_OPTIONS INTERFACES=LAMMPS COMP=${N2P2_COMP} "PROJECT_OPTIONS=${N2P2_PROJECT_OPTIONS}" "PROJECT_DEBUG="
+     "PROJECT_CC=${CMAKE_CXX_COMPILER}" "PROJECT_MPICC=${CMAKE_CXX_COMPILER}" "PROJECT_CFLAGS=${N2P2_BUILD_FLAGS}"
+-    "PROJECT_AR=${N2P2_AR}" "APP_CORE=nnp-convert" "APP_TRAIN=nnp-train" "APP=nnp-convert")
++    "PROJECT_AR=${N2P2_AR}" "APP_CORE=nnp-convert" "APP_TRAIN=nnp-train" "APP=nnp-convert" "--no-print-directory")
+   # echo final flag for debugging
+   message(STATUS "N2P2 BUILD OPTIONS: ${N2P2_BUILD_OPTIONS}")
+ 
