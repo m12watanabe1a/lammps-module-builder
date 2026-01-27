@@ -5,9 +5,14 @@ sources: {
 }
 targets:
   - category: stable
-    version: 22Jul2025_update2
-    checksum: sha256:dcfc80a7211592fbebea4dcb99289ea197458900ad2ac57bf937280023d9856f
+    version: 22Jul2025_update3
+    checksum: sha256:1710f45b2b5ea7090a51acd8ecbef540df06c53e4fba75775f2eef3468d87867
     source: release
+
+  # - category: stable
+  #   version: 22Jul2025_update2
+  #   checksum: sha256:dcfc80a7211592fbebea4dcb99289ea197458900ad2ac57bf937280023d9856f
+  #   source: release
 
   # - category: stable
   #   version: 22Jul2025_update1
