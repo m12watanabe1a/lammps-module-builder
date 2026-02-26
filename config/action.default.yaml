@@ -5,7 +5,7 @@
 action:
   - name: cmake_configure
     command: "cmake ./cmake"
-    args: 
+    args:
       - "-B build"
       - "-G Ninja"
       - "-D CMAKE_INSTALL_PREFIX={install_prefix}"
@@ -127,8 +127,7 @@ action:
       - "-v src/version.h"
       - "-w build"
   - name: install_python
-    command: "python3 -m pip install"
+    command: "python3 -m pip install -U"
     args:
       - "--target={python_install_prefix}"
       - "build/lammps*.whl"
-  
