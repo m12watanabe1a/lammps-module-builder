@@ -253,6 +253,13 @@ def main(
     no_cache: bool = False,
 ):
     build_info = BuildInfo.load()
+    logger.info("Configurations:")
+    logger.info(f"\tprefix: {prefix}")
+    logger.info(f"\tconfig_filename: {config_filename}")
+    logger.info(f"\trecipe_filename: {recipe_filename}")
+    logger.info(f"\taction_filename: {action_filename}")
+    logger.info(f"\tmodulefile_template: {modulefile_template}")
+    logger.info(f"\tsrc: {src}")
 
     target_info = yaml.safe_load(Path(config_filename).read_text())
     build_recipe = yaml.safe_load(Path(recipe_filename).read_text())
@@ -393,7 +400,7 @@ def setup_args():
     parser.add_argument(
         "--log-level",
         type=str,
-        default="ERROR",
+        default="INFO",
         help="Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL). (default: ERROR)",
     )
     parser.add_argument(
@@ -451,7 +458,7 @@ if __name__ == "__main__":
         no_cache=args.no_cache,
     )
 
-    print(f"""
+    logger.info(f"""
 All done! Modulefiles are located at: {Path(args.prefix) / "modulefiles"}
 You can load the modulefiles using Lmod. For example:
     module use {Path(args.prefix) / "modulefiles"}
