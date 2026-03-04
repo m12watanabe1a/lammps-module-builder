@@ -52,12 +52,9 @@ targets:
   #   version: 29Aug2024
   #   source: archive
 
-  - category: stable
-    version: 2Aug2023_update4
-    source: archive
-    # patches:
-    #   - file: n2p2.patch
-    #     description: "Fix N2P2 build issue with GNU Make"
+  # - category: stable
+  #   version: 2Aug2023_update4
+  #   source: archive
 
   # - category: stable
   #   version: 2Aug2023_update3

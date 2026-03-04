@@ -139,8 +139,15 @@ def patch_target(folder: str | os.PathLike[str], patches: list[dict]) -> None:
         for patch in patches:
             patch_file = PATCH_ROOT / patch["file"]
             logger.info(f"Applying patch: {patch['description']}")
+
+            if platform.system().lower() == "linux":
+                exec = "patch"
+            elif platform.system().lower() == "darwin":
+                exec = "gpatch"
+            else:
+                raise ValueError(f"Unsupported platform: {platform.system()}")
             out = subprocess.run(
-                ["patch", "--dry-run", "-p1", "-i", str(patch_file)],
+                [exec, "--dry-run", "-p1", "-i", str(patch_file)],
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -151,7 +158,7 @@ def patch_target(folder: str | os.PathLike[str], patches: list[dict]) -> None:
                 continue
             with open(log_file, "a") as f:
                 subprocess.run(
-                    ["patch", "-p1", "-N", "-i", str(patch_file)],
+                    [exec, "-p1", "-N", "-i", str(patch_file)],
                     check=True,
                     stdout=f,
                     stderr=f,

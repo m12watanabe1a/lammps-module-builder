@@ -131,3 +131,7 @@ action:
     args:
       - "--target={python_install_prefix}"
       - "build/lammps*.whl"
+  - name: darwin_set_rpath
+    command: "install_name_tool"
+    args:
+      - "-add_rpath {install_prefix}/lib {install_prefix}/bin/lmp"

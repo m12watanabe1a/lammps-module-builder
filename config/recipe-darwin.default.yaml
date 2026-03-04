@@ -5,3 +5,4 @@ steps:
   - use: cmake_install
   - use: darwin_build_python
   - use: install_python
+  - use: darwin_set_rpath
