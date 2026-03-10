@@ -138,8 +138,6 @@ def patch_target(folder: str | os.PathLike[str], patches: list[dict]) -> None:
     try:
         for patch in patches:
             patch_file = PATCH_ROOT / patch["file"]
-            logger.info(f"Applying patch: {patch['description']}")
-
             if platform.system().lower() == "linux":
                 exec = "patch"
             elif platform.system().lower() == "darwin":
@@ -156,6 +154,8 @@ def patch_target(folder: str | os.PathLike[str], patches: list[dict]) -> None:
             if any(k in out for k in ["Reversed", "already applied"]):
                 logger.info(f"Patch already applied, skipping: {patch['file']}")
                 continue
+
+            logger.info(f"Applying patch: {patch['description']}")
             with open(log_file, "a") as f:
                 subprocess.run(
                     [exec, "-p1", "-N", "-i", str(patch_file)],
