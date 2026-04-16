@@ -16,7 +16,7 @@ It simplifies the process of compiling LAMMPS with various version, configuratio
 ## Requirements
 <details>
 
-- Python 3.8 or higher
+- Python 3.10 or higher
   - Pyyaml
   - Jinja2
 - lmod v8.4 or higher
