@@ -5,12 +5,20 @@ sources: {
 }
 targets:
   - category: stable
-    version: 22Jul2025_update3
-    checksum: sha256:1710f45b2b5ea7090a51acd8ecbef540df06c53e4fba75775f2eef3468d87867
+    version: 22Jul2025_update4
+    checksum: sha256:b456a4d6f19d398dee9880d761594b4bfcb70f8dbb7c2b3aeee51815aa6419c6
     source: release
     # patches:
     #   - file: n2p2.patch
     #     description: "Fix N2P2 build issue with GNU Make"
+
+  # - category: stable
+  #   version: 22Jul2025_update3
+  #   checksum: sha256:1710f45b2b5ea7090a51acd8ecbef540df06c53e4fba75775f2eef3468d87867
+  #   source: release
+  #   patches:
+  #     - file: n2p2.patch
+  #       description: "Fix N2P2 build issue with GNU Make"
 
   # - category: stable
   #   version: 22Jul2025_update2
