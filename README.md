@@ -16,6 +16,7 @@ It simplifies the process of compiling LAMMPS with various version, configuratio
 ## Requirements
 <details>
 
+- wget
 - Python 3.10 or higher
   - Pyyaml
   - Jinja2
