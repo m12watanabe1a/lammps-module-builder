@@ -35,10 +35,10 @@ targets:
   #   checksum: sha256:5f5df1535065ffc0c7229a31f32f7f68ffd8deb31e7bd8f3770413890c46ad57
   #   source: release
 
-  - category: stable
-    version: 29Aug2024_update4
-    checksum: sha256:03dd5cc6e5cd4b053591ee4e728d82acc4d74fce4f85c16dd9b3a3e4bf1cf6b5
-    source: release
+  # - category: stable
+  #   version: 29Aug2024_update4
+  #   checksum: sha256:03dd5cc6e5cd4b053591ee4e728d82acc4d74fce4f85c16dd9b3a3e4bf1cf6b5
+  #   source: release
     # patches:
     #   - file: n2p2.patch
     #     description: "Fix N2P2 build issue with GNU Make"
