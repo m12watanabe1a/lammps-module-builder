@@ -1,0 +1,84 @@
+version: "3"
+
+vars:
+    MODULE_PREFIX: "{{.HOME}}/.local/opt/modulefiles/lammps"
+    CATEGORY: "stable"
+
+env:
+    PYTHON_VERSION:
+        sh: |
+            python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'
+
+tasks:
+    default:
+        desc: "Alias of all"
+        cmds:
+            - task: all
+
+    all:
+        desc: "Build/install all configured LAMMPS targets and generate modulefiles"
+        cmds:
+            - for:
+                  matrix:
+                      DATE: ["22Jul2025_update5"]
+              task: target
+              vars: { CATEGORY: "stable", DATE: "{{.ITEM.DATE}}" }
+
+    target:
+        desc: "Build/install one LAMMPS target and generate a modulefile"
+        requires: { vars: [CATEGORY, DATE] }
+
+        cmds:
+            - task: install_lammps
+              vars: { CATEGORY: "{{.CATEGORY}}", DATE: "{{.DATE}}" }
+            - task: generate_modulefile
+              vars: { CATEGORY: "{{.CATEGORY}}", DATE: "{{.DATE}}" }
+
+    install_lammps:
+        desc: "Build/install LAMMPS (optionally preloading modules via CLI args)"
+        requires: { vars: [CATEGORY, DATE] }
+        vars:
+            LMP_PREFIX: "{{.HOME}}/.local/opt/lammps/{{.CATEGORY}}_{{.DATE}}"
+        cmds:
+            - cmd: |
+                  {{if .CLI_ARGS_LIST -}}
+                    module purge
+                    if [ -f /etc/profile.d/modules.sh ]; then
+                      source /etc/profile.d/modules.sh
+                    elif [ -n "$MODULESHOME" ]; then
+                      source "$MODULESHOME/init/bash"
+                    fi
+                    module load {{join " " .CLI_ARGS_LIST}}
+                  {{- else -}}
+                    echo "No modules to load"
+                  {{- end}}
+                  task --taskfile "{{.TASKFILE_DIR}}/Taskfile.lammps.yml" all \
+                    CATEGORY="{{.CATEGORY}}" \
+                    DATE="{{.DATE}}" \
+                    PREFIX="{{.LMP_PREFIX}}"
+
+    generate_modulefile:
+        desc: "Generate LAMMPS modulefile"
+        requires: { vars: [CATEGORY, DATE] }
+        vars:
+            LMP_PREFIX: "{{.HOME}}/.local/opt/lammps/{{.CATEGORY}}_{{.DATE}}"
+            TEMPLATE_FILE:
+                sh: |
+                    if [ "$(uname)" = "Darwin" ]; then
+                      echo "{{.TASKFILE_DIR}}/template/template.darwin.lua"
+                    elif [ "$(uname)" = "Linux" ]; then
+                      echo "{{.TASKFILE_DIR}}/template/template.linux.lua"
+                    else
+                      echo "Unsupported OS: $(uname)" >&2
+                      exit 1
+                    fi
+        sources:
+            - "{{.TEMPLATE_FILE}}"
+        generates:
+            - "{{.MODULE_PREFIX}}/{{.CATEGORY}}_{{.DATE}}.lua"
+        cmds:
+            - cmd: |
+                  mkdir -p "{{.MODULE_PREFIX}}"
+                  PREFIX="{{.LMP_PREFIX}}" \
+                  PYTHONPATH="{{.LMP_PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages" \
+                  envsubst < "{{.TEMPLATE_FILE}}" > "{{.MODULE_PREFIX}}/{{.CATEGORY}}_{{.DATE}}.lua"

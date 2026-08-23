@@ -1,13 +1,15 @@
 # LAMMPS Module Builder
 
-This repository provides a Python-based tool to automate the building and installation of [LAMMPS (Large-scale Atomic/Molecular Massively Parallel Simulator)](https://docs.lammps.org/) modules.
-It simplifies the process of compiling LAMMPS with various version, configurations and managing module files for easy loading in different environments.
+This repository provides a Task-based workflow to automate building and installing [LAMMPS (Large-scale Atomic/Molecular Massively Parallel Simulator)](https://docs.lammps.org/) and generating environment modulefiles.
+It simplifies building LAMMPS for multiple versions/configurations and supports optional module preloading before the build starts.
 
 ## Features
 - Automated downloading and building of LAMMPS from source.
 - Support for multiple LAMMPS versions and configurations.
-- Generation of module files for easy environment management.
-- Customizable build recipes and target configurations.
+- Generation of modulefiles for easy environment management.
+- Optional preloading of dependency modules (for compiler/MPI/toolchain environments).
+- No project-level Python `requirements.txt` dependency.
+- CMake configure options managed with CMakePresets.
 
 ## Supported Platforms
 - [x] Linux (WSL on Windows)
@@ -16,10 +18,8 @@ It simplifies the process of compiling LAMMPS with various version, configuratio
 ## Requirements
 <details>
 
-- wget
+- curl
 - Python 3.10 or higher
-  - Pyyaml
-  - Jinja2
 - lmod v8.4 or higher
 - gpatch (Only for macOS)
 
@@ -32,58 +32,50 @@ Also you need to have development tools and libraries installed for building LAM
 Please refer to the [LAMMPS building guide](https://docs.lammps.org/Build_cmake.html) for detailed information on required dependencies.
 </details>
 
-## Setup
-<details>
-
-1. Setup a virtual environment and install dependencies:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-</details>
-
 ## Install LAMMPS Modules
-1. Run the install script to build and install LAMMPS modules:
+1. Run the default task (`all`) to build/install configured targets and generate modulefiles:
 ```bash
-./install.py
+task
 ```
 
-2. Load the installed LAMMPS module using the module command:
+The build steps are defined in `Taskfile.yml`. You can inspect the available tasks with:
+```bash
+task --list
+```
+
+2. Optionally preload environment modules before running the build:
+```bash
+task -- gcc/13.2.0 openmpi/5.0.3
+```
+
+The arguments after `--` are passed to `module load ...` before invoking the build Taskfile.
+
+3. Load the installed LAMMPS module using the module command:
 ```bash
 module use ~/.local/opt/modulefiles
-module load lammps/<version>
-```
-
-## Uninstall LAMMPS Modules
-```bash
-./uninstall.py
+module load lammps/stable_22Jul2025_update5
 ```
 
 ## FAQ
 (Although I haven’t actually received any questions yet.)
 
-### How do I customize the build recipe?
-You can copy the default recipe by running:
+### How do I build a specific version/category?
+Use Task variables when invoking tasks:
 ```bash
-cp config/recipe.{default.,}yaml
+task target CATEGORY=stable DATE=22Jul2025_update5
 ```
 
-Then, edit the `config/recipe.yaml` file to customize the build steps according to your requirements.
-The CLI automatically uses the customized recipe `config/recipe.yaml` if it exists.
-If you want to use a different recipe file, you can specify it with the `--recipe` argument when running the `setup.py` script.
-The detailed actions (`use: {action_name}`) used in the recipe are defined in the `config/action.default.yaml` file, which you can also customize similarly.
+The default values are defined in `Taskfile.yml` and `Taskfile.lammps.yml`.
 
-### How do I add support for additional LAMMPS versions?
-You can also copy the default target configuration by running:
-```bash
-cp config/target.{default.,}yaml
-```
-Then, edit the `config/target.yaml` file to add or modify LAMMPS versions.
-The CLI automatically uses the customized target configuration `config/target.yaml` if it exists.
-If you want to use a different target configuration file, you can specify it with the `--target` argument when running the `setup.py` script.
+### Where are the built LAMMPS binaries and modulefiles located?
+By default, the binaries are installed in `~/.local/opt/lammps/<category>_<date>`, and modulefiles are created in `~/.local/opt/modulefiles/lammps/`.
 
+### How is the Python package installed without requirements.txt?
+The build script (`scripts/install-python.sh`) uses LAMMPS' own `python/install.py` to generate a wheel, then installs that wheel with `python3 -m pip install --target ...` into:
 
-### Where are the built LAMMPS binaries and module files located?
-By default, the built binaries are installed in `~/.local/opt/lammps/<version>`, and the module files are located in `~/.local/opt/modulefiles/lammps/`.
-You can change the installation prefix by modifying the `--prefix` argument when running the `setup.py` script.
+- `<prefix>/lib/python<major.minor>/site-packages`
+
+This repository does not require a project-level `requirements.txt` because there are no extra Python package dependencies for the build workflow itself.
+
+### Which CMake preset template is used by default?
+The Task workflow uses `config/CMakePresets.default.json` as the template and copies it to `cmake/CMakePresets.json` in the LAMMPS source tree during `cmake_configure`.

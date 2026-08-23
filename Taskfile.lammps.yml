@@ -1,0 +1,109 @@
+version: "3"
+
+vars:
+    CATEGORY: "stable"
+    DATE: "22Jul2025_update5"
+    VERSION: "{{.CATEGORY}}_{{.DATE}}"
+    MODULE_DEPENDS_ON: ""
+    CMAKE_PRESETS_FILE: "{{.TASKFILE_DIR}}/config/CMakePresets.default.json"
+
+    SRC_DIR: "{{.TASKFILE_DIR}}/tmp/src/lammps-src-{{.VERSION}}"
+    TAR_FILE: "{{.TASKFILE_DIR}}/tmp/downloads/lammps-src-{{.VERSION}}.tar.gz"
+    PREFIX: "{{.HOME}}/.local/opt/lammps/{{.VERSION}}"
+
+tasks:
+    all:
+        desc: "Build and install LAMMPS from source"
+        cmds:
+            - task: build
+            - task: install
+
+    build:
+        desc: "Configure and compile LAMMPS"
+        cmds:
+            - task: download
+            - task: extract
+            - task: apply_patches
+            - task: cmake_configure
+            - task: cmake_build
+
+    install:
+        desc: "Install LAMMPS binaries and Python package"
+        cmds:
+            - task: cmake_install
+            - task: python_install
+            - task: set_rpath
+
+    download:
+        status:
+            - test -f "{{.TAR_FILE}}"
+        generates:
+            - "{{.TAR_FILE}}"
+        cmds:
+            - mkdir -p "{{.TAR_FILE | dir}}"
+            - curl -L -o "{{.TAR_FILE}}"
+              "https://github.com/lammps/lammps/releases/download/{{.VERSION}}/lammps-src-{{.DATE}}.tar.gz"
+
+    extract:
+        sources:
+            - "{{.TAR_FILE}}"
+        generates:
+            - "{{.SRC_DIR}}/README"
+        cmds:
+            - mkdir -p "{{.SRC_DIR}}"
+            - tar -xzf "{{.TAR_FILE}}" -C "{{.SRC_DIR}}" --strip-components=1
+
+    apply_patches:
+        sources:
+            - "{{.SRC_DIR}}/README"
+        generates:
+            - "{{.SRC_DIR}}/PATCHES_APPLIED"
+        dir: "{{.SRC_DIR}}"
+        cmds:
+            - find "{{.TASKFILE_DIR}}/patch" -name "*.patch" -exec bash "{{.TASKFILE_DIR}}/scripts/apply-patch.sh" {} \;
+
+    cmake_configure:
+        sources:
+            - "{{.SRC_DIR}}/CMakeLists.txt"
+        generates:
+            - "{{.SRC_DIR}}/build/CMakeCache.txt"
+        dir: "{{.SRC_DIR}}"
+        cmds:
+            - cp "{{.CMAKE_PRESETS_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
+            - cmake --preset release -S cmake -B build --fresh
+
+    cmake_build:
+        sources:
+            - "{{.SRC_DIR}}/build/CMakeCache.txt"
+        generates:
+            - "{{.SRC_DIR}}/build/lmp"
+        dir: "{{.SRC_DIR}}"
+        cmds:
+            - '{{if .MODULE_DEPENDS_ON}}module load {{join " " (splitList "," .MODULE_DEPENDS_ON)}} && {{end}}cmake --build build'
+
+    cmake_install:
+        sources:
+            - "{{.SRC_DIR}}/build/lmp"
+        generates:
+            - "{{.PREFIX}}/bin/lmp"
+        dir: "{{.SRC_DIR}}"
+        cmds:
+            - cmake --install build --prefix "{{.PREFIX}}"
+
+    python_install:
+        desc: "Build wheel and install LAMMPS Python package (no requirements.txt)"
+        sources:
+            - "{{.SRC_DIR}}/build/liblammps.*"
+        generates:
+            - "{{.PREFIX}}/lib/python*/site-packages/lammps/liblammps.*"
+        dir: "{{.SRC_DIR}}"
+        env:
+            PREFIX: "{{.PREFIX}}"
+        cmds:
+            - '{{if .MODULE_DEPENDS_ON}}module load {{join " " (splitList "," .MODULE_DEPENDS_ON)}} && {{end}}"{{.TASKFILE_DIR}}/scripts/install-python.sh"'
+
+    set_rpath:
+        status:
+            - (test "$(uname -s)" != "Darwin") || (otool -l "{{.PREFIX}}/bin/lmp" | grep -q "path {{.PREFIX}}/lib")
+        cmds:
+            - install_name_tool -add_rpath "{{.PREFIX}}/lib" "{{.PREFIX}}/bin/lmp"
