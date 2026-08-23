@@ -5,7 +5,8 @@ vars:
     DATE: "22Jul2025_update5"
     VERSION: "{{.CATEGORY}}_{{.DATE}}"
     MODULE_DEPENDS_ON: ""
-    CMAKE_PRESETS_FILE: "{{.TASKFILE_DIR}}/config/CMakePresets.default.json"
+    CMAKE_PRESETS_DEFAULT_FILE: "{{.TASKFILE_DIR}}/config/CMakePresets.default.json"
+    CMAKE_PRESETS_CUSTOM_FILE: "{{.TASKFILE_DIR}}/config/CMakePresets.json"
 
     SRC_DIR: "{{.TASKFILE_DIR}}/tmp/src/lammps-src-{{.VERSION}}"
     TAR_FILE: "{{.TASKFILE_DIR}}/tmp/downloads/lammps-src-{{.VERSION}}.tar.gz"
@@ -69,7 +70,12 @@ tasks:
             - "{{.SRC_DIR}}/build/CMakeCache.txt"
         dir: "{{.SRC_DIR}}"
         cmds:
-            - cp "{{.CMAKE_PRESETS_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
+            - |
+              if [ -f "{{.CMAKE_PRESETS_CUSTOM_FILE}}" ]; then
+                cp "{{.CMAKE_PRESETS_CUSTOM_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
+              else
+                cp "{{.CMAKE_PRESETS_DEFAULT_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
+              fi
             - cmake --preset release -S cmake -B build --fresh
 
     cmake_build:

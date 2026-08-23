@@ -77,5 +77,10 @@ The build script (`scripts/install-python.sh`) uses LAMMPS' own `python/install.
 
 This repository does not require a project-level `requirements.txt` because there are no extra Python package dependencies for the build workflow itself.
 
-### Which CMake preset template is used by default?
-The Task workflow uses `config/CMakePresets.default.json` as the template and copies it to `cmake/CMakePresets.json` in the LAMMPS source tree during `cmake_configure`.
+### Which CMake preset template is used?
+During `cmake_configure`, the Task workflow selects preset files in this order:
+
+1. `config/CMakePresets.json` (if present)
+2. `config/CMakePresets.default.json` (fallback)
+
+The selected file is copied to `cmake/CMakePresets.json` in the LAMMPS source tree.
