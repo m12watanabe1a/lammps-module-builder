@@ -42,6 +42,7 @@ tasks:
         cmds:
             - cmd: |
                   {{if .CLI_ARGS_LIST -}}
+                    bash "{{.TASKFILE_DIR}}/scripts/check-modulename.sh" {{range .CLI_ARGS_LIST}}{{printf "%q " .}}{{end}}
                     module purge
                     if [ -f /etc/profile.d/modules.sh ]; then
                       source /etc/profile.d/modules.sh
@@ -81,10 +82,7 @@ tasks:
                   mkdir -p "{{.MODULE_PREFIX}}"
                   MODULE_DEPENDS_ON=""
                   {{if .CLI_ARGS_LIST -}}
-                  for mod in {{range .CLI_ARGS_LIST}}{{printf "%q " .}}{{end}}; do
-                    MODULE_DEPENDS_ON+="depends_on(\"${mod}\")"
-                    MODULE_DEPENDS_ON+=$'\n'
-                  done
+                  MODULE_DEPENDS_ON="$(bash "{{.TASKFILE_DIR}}/scripts/check-modulename.sh" --emit-depends {{range .CLI_ARGS_LIST}}{{printf "%q " .}}{{end}})"
                   {{- end}}
                   PREFIX="{{.LMP_PREFIX}}" \
                   PYTHONPATH="{{.LMP_PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages" \
