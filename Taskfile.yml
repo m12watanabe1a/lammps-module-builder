@@ -79,6 +79,14 @@ tasks:
         cmds:
             - cmd: |
                   mkdir -p "{{.MODULE_PREFIX}}"
+                  MODULE_DEPENDS_ON=""
+                  {{if .CLI_ARGS_LIST -}}
+                  for mod in {{range .CLI_ARGS_LIST}}{{printf "%q " .}}{{end}}; do
+                    MODULE_DEPENDS_ON+="depends_on(\"${mod}\")"
+                    MODULE_DEPENDS_ON+=$'\n'
+                  done
+                  {{- end}}
                   PREFIX="{{.LMP_PREFIX}}" \
                   PYTHONPATH="{{.LMP_PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages" \
+                  MODULE_DEPENDS_ON="${MODULE_DEPENDS_ON}" \
                   envsubst < "{{.TEMPLATE_FILE}}" > "{{.MODULE_PREFIX}}/{{.CATEGORY}}_{{.DATE}}.lua"
