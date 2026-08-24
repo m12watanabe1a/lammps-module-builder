@@ -101,7 +101,7 @@ load_modules() {
     module load "${modules[@]}"
 }
 
-if [[ ${BASH_SOURCE[0]} == "$0" ]]; then
+if [[ ${BASH_SOURCE:-$0} == "$0" ]]; then
     if [[ ${1:-} == "--emit-depends" ]]; then
         check_module_names --emit-depends "${@:2}"
     else
