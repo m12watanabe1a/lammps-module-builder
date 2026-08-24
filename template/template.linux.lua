@@ -1,6 +1,4 @@
----
---- THIS FILE IS GENERATED AUTOMATICALLY DO NOT EDIT MANUALLY.
----
+#%Module
 
 help([[
 LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
