@@ -20,8 +20,8 @@ It simplifies building LAMMPS for multiple versions/configurations and supports 
 
 - curl
 - Python 3.10 or higher
-- lmod v8.4 or higher
-- gpatch (Only for macOS)
+- Environment Modules >=v5 or Lmod >=v8
+- [Task](https://taskfile.dev/) v3 or higher
 
 Also you need to have development tools and libraries installed for building LAMMPS, such as:
 - C++ compiler (e.g., GCC, Clang)
