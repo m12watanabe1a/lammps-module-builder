@@ -21,6 +21,7 @@ It simplifies the process of compiling LAMMPS with various version, configuratio
   - Pyyaml
   - Jinja2
 - lmod v8.4 or higher
+- gpatch (Only for macOS)
 
 Also you need to have development tools and libraries installed for building LAMMPS, such as:
 - C++ compiler (e.g., GCC, Clang)
