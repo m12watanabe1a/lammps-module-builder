@@ -58,6 +58,12 @@ module use ~/.local/opt/modulefiles
 module load lammps/stable_22Jul2025_update5
 ```
 
+To install under another prefix, pass `PREFIX` to Task. For example:
+```bash
+task PREFIX=/opt
+module use /opt/modulefiles
+```
+
 ## FAQ
 (Although I haven’t actually received any questions yet.)
 
@@ -70,7 +76,7 @@ task target CATEGORY=stable DATE=22Jul2025_update5
 The default values are defined in `Taskfile.yml` and `Taskfile.lammps.yml`.
 
 ### Where are the built LAMMPS binaries and modulefiles located?
-By default, the binaries are installed in `~/.local/opt/lammps/<category>_<date>`, and modulefiles are created in `~/.local/opt/modulefiles/lammps/`.
+By default, the binaries are installed in `~/.local/opt/lammps/<category>_<date>`, and modulefiles are created in `~/.local/opt/modulefiles/lammps/`. Set `PREFIX` to change the common parent directory, for example `PREFIX=/opt`.
 
 ### How is the Python package installed without requirements.txt?
 The build script (`scripts/install-python.sh`) uses LAMMPS' own `python/install.py` to generate a wheel, then installs that wheel with `python3 -m pip install --target ...` into:

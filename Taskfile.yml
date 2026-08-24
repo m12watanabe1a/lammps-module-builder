@@ -1,7 +1,8 @@
 version: "3"
 
 vars:
-  MODULE_PREFIX: "{{.HOME}}/.local/opt/modulefiles/lammps"
+  PREFIX: "{{.HOME}}/.local/opt"
+  MODULE_PREFIX: "{{.PREFIX}}/modulefiles/lammps"
   MODULES_CONFIG_DEFAULT_FILE: "{{.TASKFILE_DIR}}/config/modules.default.txt"
   MODULES_CONFIG_CUSTOM_FILE: "{{.TASKFILE_DIR}}/config/modules.txt"
   CATEGORY: "stable"
@@ -40,7 +41,7 @@ tasks:
     desc: "Build/install LAMMPS after loading configured modules"
     requires: { vars: [CATEGORY, DATE] }
     vars:
-      LMP_PREFIX: "{{.HOME}}/.local/opt/lammps/{{.CATEGORY}}_{{.DATE}}"
+      LMP_PREFIX: "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
     cmds:
       - cmd: |
           source "{{.TASKFILE_DIR}}/scripts/load_modules.sh"
@@ -59,7 +60,7 @@ tasks:
     desc: "Generate LAMMPS modulefile"
     requires: { vars: [CATEGORY, DATE] }
     vars:
-      LMP_PREFIX: "{{.HOME}}/.local/opt/lammps/{{.CATEGORY}}_{{.DATE}}"
+      LMP_PREFIX: "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
       TEMPLATE_FILE:
         sh: |
           if [ "$(uname)" = "Darwin" ]; then
