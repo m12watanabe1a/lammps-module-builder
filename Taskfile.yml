@@ -33,9 +33,15 @@ tasks:
 
     cmds:
       - task: install_lammps
-        vars: { CATEGORY: "{{.CATEGORY}}", DATE: "{{.DATE}}" }
+        vars:
+          CATEGORY: "{{.CATEGORY}}"
+          DATE: "{{.DATE}}"
+          PREFIX: "{{.PREFIX}}"
       - task: generate_modulefile
-        vars: { CATEGORY: "{{.CATEGORY}}", DATE: "{{.DATE}}" }
+        vars:
+          CATEGORY: "{{.CATEGORY}}"
+          DATE: "{{.DATE}}"
+          PREFIX: "{{.PREFIX}}"
 
   install_lammps:
     desc: "Build/install LAMMPS after loading configured modules"
