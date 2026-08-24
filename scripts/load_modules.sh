@@ -112,6 +112,7 @@ load_modules() {
 
     for mod in "${modules[@]}"; do
         module load "$mod"
+        echo "$mod loaded"
     done
 }
 

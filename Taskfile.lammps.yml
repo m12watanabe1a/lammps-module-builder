@@ -4,7 +4,6 @@ vars:
   CATEGORY: "stable"
   DATE: "22Jul2025_update5"
   VERSION: "{{.CATEGORY}}_{{.DATE}}"
-  MODULE_DEPENDS_ON: ""
   CMAKE_PRESETS_DEFAULT_FILE: "{{.TASKFILE_DIR}}/config/CMakePresets.default.json"
   CMAKE_PRESETS_CUSTOM_FILE: "{{.TASKFILE_DIR}}/config/CMakePresets.json"
 
@@ -85,7 +84,7 @@ tasks:
       - "{{.SRC_DIR}}/build/lmp"
     dir: "{{.SRC_DIR}}"
     cmds:
-      - '{{if .MODULE_DEPENDS_ON}}bash -c ''source "{{.TASKFILE_DIR}}/scripts/load_modules.sh"; load_modules {{join " " (splitList "," .MODULE_DEPENDS_ON)}}; cmake --build build''{{else}}cmake --build build{{end}}'
+      - cmake --build build
 
   cmake_install:
     sources:
@@ -106,7 +105,7 @@ tasks:
     env:
       PREFIX: "{{.PREFIX}}"
     cmds:
-      - '{{if .MODULE_DEPENDS_ON}}bash -c ''source "{{.TASKFILE_DIR}}/scripts/load_modules.sh"; load_modules {{join " " (splitList "," .MODULE_DEPENDS_ON)}}; "{{.TASKFILE_DIR}}/scripts/install-python.sh"''{{else}}"{{.TASKFILE_DIR}}/scripts/install-python.sh"{{end}}'
+      - "{{.TASKFILE_DIR}}/scripts/install-python.sh"
 
   set_rpath:
     status:
