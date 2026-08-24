@@ -1,13 +1,13 @@
 # LAMMPS Module Builder
 
 This repository provides a Task-based workflow to automate building and installing [LAMMPS (Large-scale Atomic/Molecular Massively Parallel Simulator)](https://docs.lammps.org/) and generating environment modulefiles.
-It simplifies building LAMMPS for multiple versions/configurations and supports optional module preloading before the build starts.
+It simplifies building LAMMPS for multiple versions/configurations and supports loading required toolchain modules from a config file before the build starts.
 
 ## Features
 - Automated downloading and building of LAMMPS from source.
 - Support for multiple LAMMPS versions and configurations.
 - Generation of modulefiles for easy environment management.
-- Optional preloading of dependency modules (for compiler/MPI/toolchain environments).
+- Optional module preloading from a shell-friendly module list file.
 - No project-level Python `requirements.txt` dependency.
 - CMake configure options managed with CMakePresets.
 
@@ -43,12 +43,14 @@ The build steps are defined in `Taskfile.yml`. You can inspect the available tas
 task --list
 ```
 
-2. Optionally preload environment modules before running the build:
-```bash
-task -- gcc/13.2.0 openmpi/5.0.3
+2. Define the modules to preload in a config file:
+```txt
+# config/modules.txt
+gcc/13.2.0
+openmpi/5.0.3
 ```
 
-The arguments after `--` are passed to `module load ...` before invoking the build Taskfile.
+If `config/modules.txt` exists, it is used automatically. Otherwise the default file `config/modules.default.txt` is used.
 
 3. Load the installed LAMMPS module using the module command:
 ```bash
