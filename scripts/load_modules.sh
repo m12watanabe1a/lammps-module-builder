@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
-
 trim_whitespace() {
     local s="$1"
     s="${s#"${s%%[![:space:]]*}"}"
@@ -117,7 +115,8 @@ load_modules() {
     done
 }
 
-if [[ ${BASH_SOURCE:-$0} == "$0" ]]; then
+if [[ -n ${BASH_VERSION:-} && ${BASH_SOURCE[0]} == "$0" ]]; then
+    set -euo pipefail
     if [[ ${1:-} == "--emit-depends" ]]; then
         check_module_names --emit-depends "${@:2}"
     else
