@@ -1,0 +1,21 @@
+{
+    "version": 4,
+    "configurePresets": [
+        {
+            "name": "release",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "BUILD_MPI": "ON",
+                "BUILD_SHARED_LIBS": "ON",
+                "BUILD_PYTHON": "ON",
+                "PKG_KSPACE": "ON",
+                "PKG_MANYBODY": "ON",
+                "PKG_MOLECULE": "ON",
+                "PKG_PYTHON": "ON",
+                "PKG_RIGID": "ON"
+            }
+        }
+    ]
+}
