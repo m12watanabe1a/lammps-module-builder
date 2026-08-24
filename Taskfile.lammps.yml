@@ -85,7 +85,7 @@ tasks:
       - "{{.SRC_DIR}}/build/lmp"
     dir: "{{.SRC_DIR}}"
     cmds:
-      - '{{if .MODULE_DEPENDS_ON}}module load {{join " " (splitList "," .MODULE_DEPENDS_ON)}} && {{end}}cmake --build build'
+      - '{{if .MODULE_DEPENDS_ON}}bash -c ''source "{{.TASKFILE_DIR}}/scripts/load_modules.sh"; load_modules {{join " " (splitList "," .MODULE_DEPENDS_ON)}}; cmake --build build''{{else}}cmake --build build{{end}}'
 
   cmake_install:
     sources:
@@ -106,7 +106,7 @@ tasks:
     env:
       PREFIX: "{{.PREFIX}}"
     cmds:
-      - '{{if .MODULE_DEPENDS_ON}}module load {{join " " (splitList "," .MODULE_DEPENDS_ON)}} && {{end}}"{{.TASKFILE_DIR}}/scripts/install-python.sh"'
+      - '{{if .MODULE_DEPENDS_ON}}bash -c ''source "{{.TASKFILE_DIR}}/scripts/load_modules.sh"; load_modules {{join " " (splitList "," .MODULE_DEPENDS_ON)}}; "{{.TASKFILE_DIR}}/scripts/install-python.sh"''{{else}}"{{.TASKFILE_DIR}}/scripts/install-python.sh"{{end}}'
 
   set_rpath:
     status:

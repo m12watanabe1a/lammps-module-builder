@@ -70,6 +70,7 @@ check_module_names() {
 load_modules() {
     local modules=()
     local config_file="${MODULES_CONFIG_FILE:-}"
+    local mod
     local arg
 
     if [[ $# -gt 0 ]]; then
@@ -91,14 +92,29 @@ load_modules() {
 
     check_module_names "${modules[@]}"
 
+    if ! command -v module >/dev/null 2>&1; then
+        if [ -f /etc/profile.d/modules.sh ]; then
+            source /etc/profile.d/modules.sh
+        elif [ -n "${MODULESHOME:-}" ] && [ -f "$MODULESHOME/init/bash" ]; then
+            source "$MODULESHOME/init/bash"
+        fi
+    fi
+
+    if ! command -v module >/dev/null 2>&1; then
+        echo "WARNING: module command is not available; skipping module load: ${modules[*]}" >&2
+        return 0
+    fi
+
     module purge
     if [ -f /etc/profile.d/modules.sh ]; then
         source /etc/profile.d/modules.sh
-    elif [ -n "${MODULESHOME:-}" ]; then
+    elif [ -n "${MODULESHOME:-}" ] && [ -f "$MODULESHOME/init/bash" ]; then
         source "$MODULESHOME/init/bash"
     fi
 
-    module load "${modules[@]}"
+    for mod in "${modules[@]}"; do
+        module load "$mod"
+    done
 }
 
 if [[ ${BASH_SOURCE:-$0} == "$0" ]]; then
