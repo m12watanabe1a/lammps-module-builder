@@ -2,6 +2,7 @@ version: "3"
 
 vars:
   PREFIX: "{{.HOME}}/.local/opt"
+  MODULE_SYNTAX: "lua" # or "tcl"
   MODULE_PREFIX: "{{.PREFIX}}/modulefiles/lammps"
   MODULES_CONFIG_DEFAULT_FILE: "{{.TASKFILE_DIR}}/config/modules.default.txt"
   MODULES_CONFIG_CUSTOM_FILE: "{{.TASKFILE_DIR}}/config/modules.txt"
@@ -70,21 +71,20 @@ tasks:
     desc: "Generate LAMMPS modulefile"
     requires: { vars: [CATEGORY, DATE] }
     vars:
-      LMP_PREFIX: "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
+      VERSION: "{{.CATEGORY}}_{{.DATE}}"
+      LMP_PREFIX: "{{.PREFIX}}/lammps/{{.VERSION}}"
       TEMPLATE_FILE:
         sh: |
-          if [ "$(uname)" = "Darwin" ]; then
-            echo "{{.TASKFILE_DIR}}/template/template.darwin.lua"
-          elif [ "$(uname)" = "Linux" ]; then
-            echo "{{.TASKFILE_DIR}}/template/template.linux.lua"
-          else
-            echo "Unsupported OS: $(uname)" >&2
-            exit 1
-          fi
+          OS="$({{.TASKFILE_DIR}}/scripts/get-os.sh)"
+          echo "{{.TASKFILE_DIR}}/template/template.${OS}.{{.MODULE_SYNTAX}}"
     sources:
       - "{{.TEMPLATE_FILE}}"
     generates:
-      - "{{.MODULE_PREFIX}}/{{.CATEGORY}}_{{.DATE}}.lua"
+      - "{{.MODULE_PREFIX}}/{{.VERSION}}.lua"
+    env:
+      VERSION: "{{.VERSION}}"
+      PREFIX: "{{.LMP_PREFIX}}"
+      PYTHONPATH: "{{.LMP_PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages"
     cmds:
       - cmd: |
           mkdir -p "{{.MODULE_PREFIX}}"
@@ -99,7 +99,5 @@ tasks:
           if [ -n "${MODULES_RAW}" ]; then
             MODULE_DEPENDS_ON="$(check_module_names --emit-depends ${MODULES_RAW})"
           fi
-          PREFIX="{{.LMP_PREFIX}}" \
-          PYTHONPATH="{{.LMP_PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages" \
-          MODULE_DEPENDS_ON="${MODULE_DEPENDS_ON}" \
-          envsubst < "{{.TEMPLATE_FILE}}" > "{{.MODULE_PREFIX}}/{{.CATEGORY}}_{{.DATE}}.lua"
+          export MODULE_DEPENDS_ON="${MODULE_DEPENDS_ON}"
+          envsubst '$VERSION $PREFIX $PYTHONPATH $MODULE_DEPENDS_ON' < "{{.TEMPLATE_FILE}}" > "{{.MODULE_PREFIX}}/{{.VERSION}}.lua"

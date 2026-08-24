@@ -1,4 +1,4 @@
-#%Module
+--%Module
 
 help([[
 LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
