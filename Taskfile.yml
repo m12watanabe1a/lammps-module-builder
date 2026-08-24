@@ -46,6 +46,10 @@ tasks:
   install_lammps:
     desc: "Build/install LAMMPS after loading configured modules"
     requires: { vars: [CATEGORY, DATE] }
+    sources:
+      - "{{.TASKFILE_DIR}}/Taskfile.lammps.yml"
+    generates:
+      - "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}/bin/lmp"
     vars:
       LMP_PREFIX: "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
     cmds:
