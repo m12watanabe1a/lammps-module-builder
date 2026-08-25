@@ -18,5 +18,6 @@ $MODULE_DEPENDS_ON
 prepend-path PATH [file join $prefix "bin"]
 prepend-path CPATH [file join $prefix "include"]
 prepend-path LD_LIBRARY_PATH [file join $prefix "lib"]
+prepend-path LD_LIBRARY_PATH [file join $prefix "lib64"]
 prepend-path CMAKE_PREFIX_PATH $prefix
 prepend-path PYTHONPATH $pythonpath
