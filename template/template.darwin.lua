@@ -1,4 +1,4 @@
-#%Module
+--%Module
 
 help([[
 LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator
@@ -9,7 +9,7 @@ local pythonpath = "$PYTHONPATH"
 local version = "$VERSION"
 
 whatis("Name: LAMMPS")
-whatis("Version: {{ version }}")
+whatis("Version: " .. version)
 whatis("Description: LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator")
 whatis("URL: https://www.lammps.org")
 
