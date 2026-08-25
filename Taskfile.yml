@@ -4,14 +4,7 @@ vars:
   PREFIX: "{{.HOME}}/.local/opt"
   MODULE_SYNTAX: "lua" # or "tcl"
   MODULE_PREFIX: "{{.PREFIX}}/modulefiles/lammps"
-  MODULES_CONFIG_DEFAULT_FILE: "{{.TASKFILE_DIR}}/config/modules.default.txt"
-  MODULES_CONFIG_CUSTOM_FILE: "{{.TASKFILE_DIR}}/config/modules.txt"
   CATEGORY: "stable"
-
-env:
-  PYTHON_VERSION:
-    sh: |
-      python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'
 
 tasks:
   default:
@@ -55,13 +48,10 @@ tasks:
       LMP_PREFIX: "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
     cmds:
       - cmd: |
-          source "{{.TASKFILE_DIR}}/scripts/load_modules.sh"
-          if [ -f "{{.MODULES_CONFIG_CUSTOM_FILE}}" ]; then
-            MODULES_CONFIG_FILE="{{.MODULES_CONFIG_CUSTOM_FILE}}"
-          else
-            MODULES_CONFIG_FILE="{{.MODULES_CONFIG_DEFAULT_FILE}}"
-          fi
-          load_modules
+          MODULE_CONFIG_FILE=$("{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt")
+          source "{{.TASKFILE_DIR}}/scripts/modules.sh"
+          module-load ${MODULE_CONFIG_FILE}
+          export PYTHON_VERSION="$({{.TASKFILE_DIR}}/scripts/get-python-version.sh)"
           task --taskfile "{{.TASKFILE_DIR}}/Taskfile.lammps.yml" all \
             CATEGORY="{{.CATEGORY}}" \
             DATE="{{.DATE}}" \
@@ -73,6 +63,7 @@ tasks:
     vars:
       VERSION: "{{.CATEGORY}}_{{.DATE}}"
       LMP_PREFIX: "{{.PREFIX}}/lammps/{{.VERSION}}"
+      MODULE_FILE: "{{.MODULE_PREFIX}}/{{.VERSION}}.{{.MODULE_SYNTAX}}"
       TEMPLATE_FILE:
         sh: |
           OS="$({{.TASKFILE_DIR}}/scripts/get-os.sh)"
@@ -80,24 +71,18 @@ tasks:
     sources:
       - "{{.TEMPLATE_FILE}}"
     generates:
-      - "{{.MODULE_PREFIX}}/{{.VERSION}}.lua"
+      - "{{.MODULE_FILE}}"
     env:
       VERSION: "{{.VERSION}}"
       PREFIX: "{{.LMP_PREFIX}}"
-      PYTHONPATH: "{{.LMP_PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages"
     cmds:
       - cmd: |
           mkdir -p "{{.MODULE_PREFIX}}"
-          MODULE_DEPENDS_ON=""
-          source "{{.TASKFILE_DIR}}/scripts/load_modules.sh"
-          if [ -f "{{.MODULES_CONFIG_CUSTOM_FILE}}" ]; then
-            MODULES_CONFIG_FILE="{{.MODULES_CONFIG_CUSTOM_FILE}}"
-          else
-            MODULES_CONFIG_FILE="{{.MODULES_CONFIG_DEFAULT_FILE}}"
-          fi
-          MODULES_RAW="$(resolve_modules_from_file "${MODULES_CONFIG_FILE}")"
-          if [ -n "${MODULES_RAW}" ]; then
-            MODULE_DEPENDS_ON="$(check_module_names --emit-depends ${MODULES_RAW})"
-          fi
+          MODULE_CONFIG_FILE=$("{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt")
+          source "{{.TASKFILE_DIR}}/scripts/modules.sh"
+          module-load ${MODULE_CONFIG_FILE}
+          MODULE_DEPENDS_ON="$(module-deps ${MODULE_CONFIG_FILE} {{.MODULE_SYNTAX}})"
+          PYTHON_VERSION="$({{.TASKFILE_DIR}}/scripts/get-python-version.sh)"
+          export PYTHONPATH="{{.LMP_PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages"
           export MODULE_DEPENDS_ON="${MODULE_DEPENDS_ON}"
-          envsubst '$VERSION $PREFIX $PYTHONPATH $MODULE_DEPENDS_ON' < "{{.TEMPLATE_FILE}}" > "{{.MODULE_PREFIX}}/{{.VERSION}}.lua"
+          envsubst '$VERSION $PREFIX $PYTHONPATH $MODULE_DEPENDS_ON' < "{{.TEMPLATE_FILE}}" > "{{.MODULE_FILE}}"

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-if [ "$(uname)" = "Darwin" ]; then
+uname=$(uname -s)
+if [ "$uname" = "Darwin" ]; then
     echo "darwin"
-elif [ "$(uname)" = "Linux" ]; then
+elif [ "$uname" = "Linux" ]; then
     echo "linux"
 else
-    echo "Unsupported OS: $(uname)" >&2
+    echo "Unsupported OS: $uname" >&2
     exit 1
 fi

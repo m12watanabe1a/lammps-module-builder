@@ -2,13 +2,17 @@
 
 set -euo pipefail
 
-case "$(uname -s)" in
-    Darwin) libext="dylib" ;;
-    Linux) libext="so" ;;
-    *)
-        echo "Unsupported host OS: $(uname -s)" >&2
-        exit 1
+uname=$(uname -s)
+case $uname in
+    Darwin)
+    libext="dylib"
         ;;
+    Linux)
+    libext="so"
+        ;;
+    *)
+    echo "Unsupported OS: $uname" >&2
+    exit 1
 esac
 
 python3 python/install.py -n \
