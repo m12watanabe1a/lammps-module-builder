@@ -61,7 +61,7 @@ module-load() {
 module-deps() {
     # print the module dependencies for the given config file
     local config_file="${1:-}"
-    local syntax="${2:-lua}"
+    local syntax="${2:-tcl}"
     local -a mods=()
 
     [[ -z $config_file ]] && return 0
@@ -78,16 +78,16 @@ module-deps() {
         return 0
     fi
 
-    # syntax can be 'lua' or 'tcl'
+    # syntax can be 'tcl' or 'lua'
     case "$syntax" in
-        lua)
-            for mod in "${mods[@]}"; do
-                echo "depends_on(\"$mod\")"
-            done
-            ;;
         tcl)
             for mod in "${mods[@]}"; do
                 echo "module load $mod"
+            done
+            ;;
+        lua)
+            for mod in "${mods[@]}"; do
+                echo "depends_on(\"$mod\")"
             done
             ;;
         *)
