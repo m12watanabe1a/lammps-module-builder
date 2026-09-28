@@ -60,15 +60,18 @@ tasks:
       - find "{{.TASKFILE_DIR}}/patch" -name "*.patch" -exec bash "{{.TASKFILE_DIR}}/scripts/apply-patch.sh" {} \;
 
   cmake_configure:
+    vars:
+      CMAKE_PRESETS_FILE:
+        sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/CMakePresets.json"'
     sources:
       - "{{.SRC_DIR}}/CMakeLists.txt"
+      - "{{.CMAKE_PRESETS_FILE}}"
+      - "{{.TASKFILE_DIR}}/scripts/resolve-file.sh"
     generates:
       - "{{.SRC_DIR}}/build/CMakeCache.txt"
     dir: "{{.SRC_DIR}}"
     cmds:
-      - |
-        CMAKE_PRESETS_FILE=$("{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/CMakePresets.json")
-        cp "${CMAKE_PRESETS_FILE}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
+      - cp "{{.CMAKE_PRESETS_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
       - cmake --preset release -S cmake -B build --fresh
 
   cmake_build:
