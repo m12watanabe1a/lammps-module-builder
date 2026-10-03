@@ -13,6 +13,8 @@ whatis("Version: " .. version)
 whatis("Description: LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator")
 whatis("URL: https://www.lammps.org")
 
+family("LAMMPS")
+
 $MODULE_DEPENDS_ON
 
 prepend_path("PATH", pathJoin(prefix, "bin"))

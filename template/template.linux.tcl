@@ -13,6 +13,8 @@ module-whatis "Version: $version"
 module-whatis "Description: LAMMPS - Large-scale Atomic/Molecular Massively Parallel Simulator"
 module-whatis "URL: https://www.lammps.org"
 
+family "LAMMPS"
+
 $MODULE_DEPENDS_ON
 
 prepend-path PATH [file join $prefix "bin"]
