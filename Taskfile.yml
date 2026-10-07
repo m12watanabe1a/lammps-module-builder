@@ -30,7 +30,7 @@ tasks:
         vars:
           CATEGORY: "{{.CATEGORY}}"
           DATE: "{{.DATE}}"
-          PREFIX: "{{.PREFIX}}"
+          PREFIX: "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
       - task: generate_modulefile
         vars:
           CATEGORY: "{{.CATEGORY}}"
@@ -39,31 +39,33 @@ tasks:
 
   install_lammps:
     desc: "Build/install LAMMPS after loading configured modules"
-    requires: { vars: [CATEGORY, DATE] }
+    requires: { vars: [CATEGORY, DATE, PREFIX] }
     sources:
       - "{{.TASKFILE_DIR}}/Taskfile.lammps.yml"
     generates:
       - "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}/bin/lmp"
     vars:
-      LMP_PREFIX: "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
+      TASKFILE: "{{.TASKFILE_DIR}}/Taskfile.lammps.yml"
+      DEPMOD_FILE:
+        sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt"'
     cmds:
       - cmd: |
-          MODULE_CONFIG_FILE=$("{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt")
           source "{{.TASKFILE_DIR}}/scripts/modules.sh"
-          module-load ${MODULE_CONFIG_FILE}
-          export PYTHON_VERSION="$({{.TASKFILE_DIR}}/scripts/get-python-version.sh)"
-          task --taskfile "{{.TASKFILE_DIR}}/Taskfile.lammps.yml" all \
+          module-load {{.DEPMOD_FILE}}
+          task --taskfile "{{.TASKFILE}}" all \
             CATEGORY="{{.CATEGORY}}" \
             DATE="{{.DATE}}" \
-            PREFIX="{{.LMP_PREFIX}}"
+            PREFIX="{{.PREFIX}}"
 
   generate_modulefile:
     desc: "Generate LAMMPS modulefile"
-    requires: { vars: [CATEGORY, DATE] }
+    requires: { vars: [CATEGORY, DATE, PREFIX] }
     vars:
       VERSION: "{{.CATEGORY}}_{{.DATE}}"
-      LMP_PREFIX: "{{.PREFIX}}/lammps/{{.VERSION}}"
+      MODULE_PREFIX: "{{.PREFIX}}/modulefiles/lammps"
       MODULE_FILE: "{{.MODULE_PREFIX}}/{{.VERSION}}.{{.MODULE_SYNTAX}}"
+      DEPMOD_FILE:
+        sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt"'
       TEMPLATE_FILE:
         sh: |
           OS="$({{.TASKFILE_DIR}}/scripts/get-os.sh)"
@@ -74,15 +76,13 @@ tasks:
       - "{{.MODULE_FILE}}"
     env:
       VERSION: "{{.VERSION}}"
-      PREFIX: "{{.LMP_PREFIX}}"
+      PREFIX: "{{.PREFIX}}/lammps/{{.VERSION}}"
     cmds:
       - cmd: |
           mkdir -p "{{.MODULE_PREFIX}}"
-          MODULE_CONFIG_FILE=$("{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt")
           source "{{.TASKFILE_DIR}}/scripts/modules.sh"
-          module-load ${MODULE_CONFIG_FILE}
-          MODULE_DEPENDS_ON="$(module-deps ${MODULE_CONFIG_FILE} {{.MODULE_SYNTAX}})"
+          module-load {{.DEPMOD_FILE}}
+          export MODULE_DEPENDS_ON="$(module-deps {{.DEPMOD_FILE}} {{.MODULE_SYNTAX}})"
           export PYTHON_VERSION="$({{.TASKFILE_DIR}}/scripts/get-python-version.sh)"
-          export PYTHONPATH="{{.LMP_PREFIX}}/lib/python${PYTHON_VERSION}/site-packages"
           export MODULE_DEPENDS_ON="${MODULE_DEPENDS_ON}"
-          envsubst '$VERSION $PREFIX $PYTHONPATH $MODULE_DEPENDS_ON' < "{{.TEMPLATE_FILE}}" > "{{.MODULE_FILE}}"
+          envsubst '$VERSION $PREFIX $PYTHON_VERSION $MODULE_DEPENDS_ON' < "{{.TEMPLATE_FILE}}" > "{{.MODULE_FILE}}"

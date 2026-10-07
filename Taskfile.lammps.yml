@@ -42,6 +42,8 @@ tasks:
         "https://github.com/lammps/lammps/releases/download/{{.VERSION}}/lammps-src-{{.DATE}}.tar.gz"
 
   extract:
+    deps:
+      - task: download
     sources:
       - "{{.TAR_FILE}}"
     generates:
@@ -51,6 +53,8 @@ tasks:
       - tar -xzf "{{.TAR_FILE}}" -C "{{.SRC_DIR}}" --strip-components=1
 
   apply_patches:
+    deps:
+      - task: extract
     sources:
       - "{{.SRC_DIR}}/README"
     generates:
@@ -60,6 +64,8 @@ tasks:
       - find "{{.TASKFILE_DIR}}/patch" -name "*.patch" -exec bash "{{.TASKFILE_DIR}}/scripts/apply-patch.sh" {} \;
 
   cmake_configure:
+    deps:
+      - task: apply_patches
     vars:
       CMAKE_PRESETS_FILE:
         sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/CMakePresets.json"'
@@ -75,6 +81,8 @@ tasks:
       - cmake --preset release -S cmake -B build --fresh
 
   cmake_build:
+    deps:
+      - task: cmake_configure
     sources:
       - "{{.SRC_DIR}}/build/CMakeCache.txt"
     generates:
@@ -84,6 +92,8 @@ tasks:
       - cmake --build build
 
   cmake_install:
+    deps:
+      - task: cmake_build
     sources:
       - "{{.SRC_DIR}}/build/lmp"
     generates:
@@ -92,8 +102,15 @@ tasks:
     cmds:
       - cmake --install build --prefix "{{.PREFIX}}"
 
+  set_rpath:
+    deps:
+      - task: cmake_install
+    status:
+      - (test "$(uname -s)" != "Darwin") || (otool -l "{{.PREFIX}}/bin/lmp" | grep -q "path {{.PREFIX}}/lib")
+    cmds:
+      - install_name_tool -add_rpath "{{.PREFIX}}/lib" "{{.PREFIX}}/bin/lmp"
+
   python_install:
-    desc: "Build wheel and install LAMMPS Python package (no requirements.txt)"
     sources:
       - "{{.SRC_DIR}}/build/liblammps.*"
     generates:
@@ -103,9 +120,3 @@ tasks:
       PREFIX: "{{.PREFIX}}"
     cmds:
       - "{{.TASKFILE_DIR}}/scripts/install-python.sh"
-
-  set_rpath:
-    status:
-      - (test "$(uname -s)" != "Darwin") || (otool -l "{{.PREFIX}}/bin/lmp" | grep -q "path {{.PREFIX}}/lib")
-    cmds:
-      - install_name_tool -add_rpath "{{.PREFIX}}/lib" "{{.PREFIX}}/bin/lmp"
