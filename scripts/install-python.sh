@@ -20,6 +20,8 @@ python3 python/install.py -n \
     -l "build/liblammps.${libext}" \
     -v src/version.h -w build
 
+PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+
 python3 -m pip install \
     --target="${PREFIX}/lib/python${PYTHON_VERSION}/site-packages" \
     build/lammps*.whl

@@ -83,6 +83,6 @@ tasks:
           source "{{.TASKFILE_DIR}}/scripts/modules.sh"
           module-load {{.DEPMOD_FILE}}
           export MODULE_DEPENDS_ON="$(module-deps {{.DEPMOD_FILE}} {{.MODULE_SYNTAX}})"
-          export PYTHON_VERSION="$({{.TASKFILE_DIR}}/scripts/get-python-version.sh)"
+          export PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
           export MODULE_DEPENDS_ON="${MODULE_DEPENDS_ON}"
           envsubst '$VERSION $PREFIX $PYTHON_VERSION $MODULE_DEPENDS_ON' < "{{.TEMPLATE_FILE}}" > "{{.MODULE_FILE}}"
