@@ -80,11 +80,11 @@ tasks:
       - cp "{{.CMAKE_PRESETS_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
       - cmake 
         --fresh
-        --prefix "{{.PREFIX}}"
         --preset release
         -S cmake
         -B build
         -D Python_EXECUTABLE=$(which python3)
+        -D CMAKE_INSTALL_PREFIX="{{.PREFIX}}"
 
   cmake_build:
     deps:
