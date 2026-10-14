@@ -78,7 +78,12 @@ tasks:
     dir: "{{.SRC_DIR}}"
     cmds:
       - cp "{{.CMAKE_PRESETS_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
-      - cmake --preset release -S cmake -B build --fresh
+      - cmake 
+        --fresh
+        --preset release
+        -S cmake
+        -B build
+        -D Python_EXECUTABLE=$(which python3)
 
   cmake_build:
     deps:
