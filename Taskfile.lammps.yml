@@ -29,6 +29,7 @@ tasks:
     cmds:
       - task: cmake_install
       - task: python_install
+      - task: pip_install
       - task: set_rpath
 
   download:
