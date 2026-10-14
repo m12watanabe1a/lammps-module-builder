@@ -18,7 +18,7 @@ family("LAMMPS")
 prepend_path("PATH", pathJoin(prefix, "bin"))
 prepend_path("CPATH", pathJoin(prefix, "include"))
 prepend_path("DYLD_LIBRARY_PATH", pathJoin(prefix, "lib"))
-prepend_path("PYTHONPATH", pathJoin(prefix, "lib/python" .. python_version .. "/site-packages"))
+prepend_path("PYTHONPATH", pathJoin(prefix, "lib", "python" .. python_version, "site-packages"))
 prepend_path("CMAKE_PREFIX_PATH", prefix)
 
 $MODULE_DEPENDS_ON
