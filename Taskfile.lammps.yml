@@ -80,6 +80,7 @@ tasks:
       - cp "{{.CMAKE_PRESETS_FILE}}" "{{.SRC_DIR}}/cmake/CMakePresets.json"
       - cmake 
         --fresh
+        --prefix "{{.PREFIX}}"
         --preset release
         -S cmake
         -B build
@@ -105,7 +106,7 @@ tasks:
       - "{{.PREFIX}}/bin/lmp"
     dir: "{{.SRC_DIR}}"
     cmds:
-      - cmake --install build --prefix "{{.PREFIX}}"
+      - cmake --install build
 
   set_rpath:
     deps:
