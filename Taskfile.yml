@@ -47,7 +47,7 @@ tasks:
     vars:
       TASKFILE: "{{.TASKFILE_DIR}}/Taskfile.lammps.yml"
       DEPMOD_FILE:
-        sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt"'
+        sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.build.txt"'
     cmds:
       - cmd: |
           source "{{.TASKFILE_DIR}}/scripts/modules.sh"
@@ -65,7 +65,7 @@ tasks:
       MODULE_PREFIX: "{{.PREFIX}}/modulefiles/lammps"
       MODULE_FILE: "{{.MODULE_PREFIX}}/{{.VERSION}}.{{.MODULE_SYNTAX}}"
       DEPMOD_FILE:
-        sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.txt"'
+        sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.runtime.txt"'
       TEMPLATE_FILE:
         sh: |
           OS="$({{.TASKFILE_DIR}}/scripts/get-os.sh)"

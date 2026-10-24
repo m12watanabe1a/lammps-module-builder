@@ -19,7 +19,22 @@ module-open() {
     printf '%s\n' "${modules[@]}"
 }
 
-module-load() {
+module-init() {
+    if ! command -v module >/dev/null 2>&1; then
+        if [ -f /etc/profile.d/modules.sh ]; then
+            source /etc/profile.d/modules.sh
+        elif [ -n "${MODULESHOME:-}" ] && [ -f "$MODULESHOME/init/bash" ]; then
+            source "$MODULESHOME/init/bash"
+        fi
+    fi
+
+    if ! command -v module >/dev/null 2>&1; then
+        echo "ERROR: module command is not available" >&2
+        return 1
+    fi
+}
+
+module-load-config() {
     local config_file="${1:-}"
     local -a mods=()
     [[ -z $config_file ]] && return 0
@@ -36,18 +51,7 @@ module-load() {
         return 0
     fi
 
-    if ! command -v module >/dev/null 2>&1; then
-        if [ -f /etc/profile.d/modules.sh ]; then
-            source /etc/profile.d/modules.sh
-        elif [ -n "${MODULESHOME:-}" ] && [ -f "$MODULESHOME/init/bash" ]; then
-            source "$MODULESHOME/init/bash"
-        fi
-    fi
-
-    if ! command -v module >/dev/null 2>&1; then
-        echo "ERROR: module command is not available; cannot load modules: $mods" >&2
-        return 1
-    fi
+    module-init || return 1
 
     module purge
     for mod in "${mods[@]}"; do
@@ -58,8 +62,8 @@ module-load() {
     done
 }
 
-module-deps() {
-    # print the module dependencies for the given config file
+module-render-deps() {
+    # Render module dependencies from the config file.
     local config_file="${1:-}"
     local syntax="${2:-tcl}"
     local -a mods=()

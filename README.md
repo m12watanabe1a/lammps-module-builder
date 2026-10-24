@@ -43,14 +43,27 @@ The build steps are defined in `Taskfile.yml`. You can inspect the available tas
 task --list
 ```
 
-2. Define the modules to preload in a config file:
+2. Define the modules required while building LAMMPS in `config/modules.build.txt`:
 ```txt
-# config/modules.txt
+# config/modules.build.txt
 gcc/13.2.0
 openmpi/5.0.3
 ```
 
-If `config/modules.txt` exists, it is used automatically. Otherwise the default file `config/modules.default.txt` is used.
+These modules are loaded before the build starts. If `config/modules.build.txt`
+does not exist, `config/modules.build.default.txt` is used instead.
+
+You can separately define the modules required at runtime by the generated
+modulefile in `config/modules.runtime.txt`:
+```txt
+# config/modules.runtime.txt
+gcc/13.2.0
+openmpi/5.0.3
+```
+
+If `config/modules.runtime.txt` does not exist, `config/modules.runtime.default.txt`
+is used instead. The runtime modules are written as dependencies into the
+generated LAMMPS modulefile.
 
 3. Load the installed LAMMPS module using the module command:
 ```bash
