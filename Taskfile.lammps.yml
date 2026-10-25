@@ -11,25 +11,17 @@ vars:
 tasks:
   all:
     desc: "Build and install LAMMPS from source"
-    cmds:
-      - task: build
+    deps:
       - task: install
 
   build:
     desc: "Configure and compile LAMMPS"
-    cmds:
-      - task: download
-      - task: extract
-      - task: apply_patches
-      - task: cmake_configure
+    deps:
       - task: cmake_build
 
   install:
     desc: "Install LAMMPS binaries and Python package"
-    cmds:
-      - task: cmake_install
-      - task: python_install
-      - task: pip_install
+    deps:
       - task: set_rpath
 
   download:
@@ -63,6 +55,7 @@ tasks:
     dir: "{{.SRC_DIR}}"
     cmds:
       - find "{{.TASKFILE_DIR}}/patch" -name "*.patch" -exec bash "{{.TASKFILE_DIR}}/scripts/apply-patch.sh" {} \;
+      - touch "{{.SRC_DIR}}/PATCHES_APPLIED"
 
   cmake_configure:
     deps:
@@ -111,17 +104,24 @@ tasks:
 
   set_rpath:
     deps:
-      - task: cmake_install
+      - task: pip_install
     status:
       - (test "$(uname -s)" != "Darwin") || (otool -l "{{.PREFIX}}/bin/lmp" | grep -q "path {{.PREFIX}}/lib")
     cmds:
       - install_name_tool -add_rpath "{{.PREFIX}}/lib" "{{.PREFIX}}/bin/lmp"
 
   python_install:
+    deps:
+      - task: cmake_install
+    vars:
+      PYTHON_VERSION:
+        sh: 'python3 -c "import sys; print(f\"{sys.version_info.major}.{sys.version_info.minor}\")"'
+      PYTHON_SITE_PACKAGES: "{{.PREFIX}}/lib/python{{.PYTHON_VERSION}}/site-packages"
+    status:
+      - test -n "$(find "{{.PYTHON_SITE_PACKAGES}}/lammps" -maxdepth 1 -name 'liblammps.*' -print -quit 2>/dev/null)"
     sources:
       - "{{.SRC_DIR}}/build/liblammps.*"
-    generates:
-      - "{{.PREFIX}}/lib/python*/site-packages/lammps/liblammps.*"
+      - "{{.TASKFILE_DIR}}/scripts/install-python.sh"
     dir: "{{.SRC_DIR}}"
     env:
       PREFIX: "{{.PREFIX}}"
@@ -134,8 +134,6 @@ tasks:
     vars:
       PACKAGES_FILE:
         sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/requirements.txt"'
-    sources:
-      - "{{.PACKAGES_FILE}}"
     cmds:
-      - python3 -m pip install -r {{.PACKAGES_FILE}} --prefix {{.PREFIX}}
+      - python3 -m pip install -r "{{.PACKAGES_FILE}}" --prefix "{{.PREFIX}}"
   
