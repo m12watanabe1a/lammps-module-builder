@@ -20,8 +20,6 @@ python3 python/install.py -n \
     -l "build/liblammps.${libext}" \
     -v src/version.h -w build
 
-python3 -m pip install --upgrade pip
-
 python3 -m pip install \
     --prefix="${PREFIX}" \
     build/lammps*.whl
