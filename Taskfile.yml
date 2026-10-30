@@ -5,24 +5,31 @@ vars:
   MODULE_SYNTAX: "tcl" # or "lua"
   MODULE_PREFIX: "{{.PREFIX}}/modulefiles/lammps"
   CATEGORY: "stable"
+  VERSION_LIST: [
+    {
+      CATEGORY: "stable",
+      DATE: "22Jul2025_update6",
+    },
+  ]
 
 tasks:
   default:
     desc: "Alias of all"
     cmds:
-      - task: all
+      - task: setup_all
 
-  all:
-    desc: "Build/install all configured LAMMPS targets and generate modulefiles"
+  setup_all:
+    desc: "Setup all configured LAMMPS targets and modulefiles"
     cmds:
       - for:
           matrix:
-            DATE: ["22Jul2025_update5"]
-        task: target
-        vars: { CATEGORY: "stable", DATE: "{{.ITEM.DATE}}" }
+            VERSION:
+              ref: .VERSION_LIST
+        task: setup
+        vars: { CATEGORY: "{{.ITEM.VERSION.CATEGORY}}", DATE: "{{.ITEM.VERSION.DATE}}" }
 
-  target:
-    desc: "Build/install one LAMMPS target and generate a modulefile"
+  setup:
+    desc: "Setup a specific LAMMPS target and its modulefile"
     requires: { vars: [CATEGORY, DATE] }
 
     cmds:
@@ -36,6 +43,30 @@ tasks:
           CATEGORY: "{{.CATEGORY}}"
           DATE: "{{.DATE}}"
           PREFIX: "{{.PREFIX}}"
+
+  clean_all:
+    desc: "Clean all configured LAMMPS targets and modulefiles"
+    cmds:
+      - for:
+          matrix:
+            VERSION:
+              ref: .VERSION_LIST
+        task: clean
+        vars:
+          CATEGORY: "{{.ITEM.VERSION.CATEGORY}}"
+          DATE: "{{.ITEM.VERSION.DATE}}"
+
+  clean:
+    desc: "Clean a specific LAMMPS target and its modulefile"
+    requires: { vars: [CATEGORY, DATE] }
+    status:
+      - test ! -d "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
+      - test ! -d "{{.PREFIX}}/modulefiles/lammps/{{.CATEGORY}}_{{.DATE}}.{{.MODULE_SYNTAX}}"
+    cmds:
+      - cmd: >
+          "{{.TASKFILE_DIR}}/scripts/clean.sh"
+          "{{.PREFIX}}/lammps/{{.CATEGORY}}_{{.DATE}}"
+          "{{.PREFIX}}/modulefiles/lammps/{{.CATEGORY}}_{{.DATE}}.{{.MODULE_SYNTAX}}"
 
   install_lammps:
     desc: "Build/install LAMMPS after loading configured modules"

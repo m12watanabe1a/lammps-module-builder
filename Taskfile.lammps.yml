@@ -2,7 +2,7 @@ version: "3"
 
 vars:
   CATEGORY: "stable"
-  DATE: "22Jul2025_update5"
+  DATE: "22Jul2025_update6"
   VERSION: "{{.CATEGORY}}_{{.DATE}}"
   SRC_DIR: "{{.TASKFILE_DIR}}/tmp/src/lammps-src-{{.VERSION}}"
   TAR_FILE: "{{.TASKFILE_DIR}}/tmp/downloads/lammps-src-{{.VERSION}}.tar.gz"
@@ -34,9 +34,20 @@ tasks:
       - curl -L -o "{{.TAR_FILE}}"
         "https://github.com/lammps/lammps/releases/download/{{.VERSION}}/lammps-src-{{.DATE}}.tar.gz"
 
-  extract:
+  verify:
     deps:
       - task: download
+    vars:
+      CHECKSUM_FILE: "{{.TASKFILE_DIR}}/checksums/lammps-src-{{.DATE}}.tar.gz.sha256"
+    cmds:
+      - cmd: >
+          "{{.TASKFILE_DIR}}/scripts/verify.sh"
+          "{{.CHECKSUM_FILE}}"
+          "{{.TAR_FILE}}"
+  
+  extract:
+    deps:
+      - task: verify
     sources:
       - "{{.TAR_FILE}}"
     generates:
