@@ -80,10 +80,15 @@ tasks:
       DEPMOD_FILE:
         sh: '"{{.TASKFILE_DIR}}/scripts/resolve-file.sh" "{{.TASKFILE_DIR}}/config/modules.build.txt"'
     cmds:
+      - cmd: >
+          task --taskfile "{{.TASKFILE}}" extract \
+            CATEGORY="{{.CATEGORY}}" \
+            DATE="{{.DATE}}" \
+            PREFIX="{{.PREFIX}}"
       - cmd: |
           source "{{.TASKFILE_DIR}}/scripts/modules.sh"
           module-load-config {{.DEPMOD_FILE}}
-          task --taskfile "{{.TASKFILE}}" all \
+          task --taskfile "{{.TASKFILE}}" install \
             CATEGORY="{{.CATEGORY}}" \
             DATE="{{.DATE}}" \
             PREFIX="{{.PREFIX}}"
