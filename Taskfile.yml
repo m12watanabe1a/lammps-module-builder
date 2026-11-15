@@ -22,11 +22,9 @@ tasks:
     desc: "Setup all configured LAMMPS targets and modulefiles"
     cmds:
       - for:
-          matrix:
-            VERSION:
-              ref: .VERSION_LIST
+          var: VERSION_LIST
         task: setup
-        vars: { CATEGORY: "{{.ITEM.VERSION.CATEGORY}}", DATE: "{{.ITEM.VERSION.DATE}}" }
+        vars: { CATEGORY: "{{.ITEM.CATEGORY}}", DATE: "{{.ITEM.DATE}}" }
 
   setup:
     desc: "Setup a specific LAMMPS target and its modulefile"
@@ -48,13 +46,11 @@ tasks:
     desc: "Clean all configured LAMMPS targets and modulefiles"
     cmds:
       - for:
-          matrix:
-            VERSION:
-              ref: .VERSION_LIST
+          var: VERSION_LIST
         task: clean
         vars:
-          CATEGORY: "{{.ITEM.VERSION.CATEGORY}}"
-          DATE: "{{.ITEM.VERSION.DATE}}"
+          CATEGORY: "{{.ITEM.CATEGORY}}"
+          DATE: "{{.ITEM.DATE}}"
 
   clean:
     desc: "Clean a specific LAMMPS target and its modulefile"
