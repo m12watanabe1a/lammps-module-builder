@@ -21,5 +21,9 @@ elif patch -C -R -f -p1 <"$patch_file" >/dev/null 2>&1; then
     echo "Patch already applied: $(basename "$patch_file")"
 else
     echo "Failed to apply patch: $(basename "$patch_file")" >&2
+    echo "Forward patch check:" >&2
+    patch -C -N -f -p1 <"$patch_file" || true
+    echo "Reverse patch check:" >&2
+    patch -C -R -f -p1 <"$patch_file" || true
     exit 4
 fi
