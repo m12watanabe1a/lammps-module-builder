@@ -13,11 +13,11 @@ if [[ ! -f $patch_file ]]; then
     exit 3
 fi
 
-if git apply --no-index --check "$patch_file" >/dev/null 2>&1; then
+if patch -C -N -f -p1 <"$patch_file" >/dev/null 2>&1; then
     echo "Applying patch: $(basename "$patch_file")"
-    git apply --no-index "$patch_file"
+    patch -N -f -p1 <"$patch_file"
     echo "${patch_file}" >>PATCHES_APPLIED
-elif git apply --no-index --reverse --check "$patch_file" >/dev/null 2>&1; then
+elif patch -C -R -f -p1 <"$patch_file" >/dev/null 2>&1; then
     echo "Patch already applied: $(basename "$patch_file")"
 else
     echo "Failed to apply patch: $(basename "$patch_file")" >&2

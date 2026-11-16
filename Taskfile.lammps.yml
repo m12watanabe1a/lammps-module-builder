@@ -61,6 +61,7 @@ tasks:
       - task: extract
     sources:
       - "{{.SRC_DIR}}/README"
+      - "{{.TASKFILE_DIR}}/patch/*.patch"
     generates:
       - "{{.SRC_DIR}}/PATCHES_APPLIED"
     dir: "{{.SRC_DIR}}"
